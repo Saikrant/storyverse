@@ -14,18 +14,18 @@ export function SiteHeader() {
           <span>StoryVerse</span>
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
-          <Link href="#stories" className="transition-colors hover:text-foreground">
+          <Link href="/books" className="transition-colors hover:text-foreground">
             Stories
           </Link>
-          <Link href="#studio" className="transition-colors hover:text-foreground">
+          <Link href="#" className="transition-colors hover:text-foreground">
             Studio
           </Link>
-          <Link href="#ai" className="transition-colors hover:text-foreground">
+          <Link href="/#ai" className="transition-colors hover:text-foreground">
             AI
           </Link>
         </nav>
         <Button asChild size="sm" className="rounded-full px-4">
-          <Link href="#write">Start Writing</Link>
+          <Link href="#">Start Writing</Link>
         </Button>
       </div>
     </header>

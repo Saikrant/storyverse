@@ -1,44 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, BookMarked, PenLine, Sparkles } from "lucide-react";
+import { ArrowRight, BookMarked, PenLine } from "lucide-react";
 
-import { BookCard } from "@/components/book-card";
-import { SectionHeading } from "@/components/section-heading";
+import { AiPreviewPanel } from "@/components/ai-preview-panel";
+import { FeaturedShelf } from "@/components/featured-shelf";
+import { HowItWorks } from "@/components/how-it-works";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-const featuredBooks = [
-  {
-    title: "The Lantern Archive",
-    author: "Mira Vale",
-    genre: "Fantasy",
-    description:
-      "A quiet archivist discovers a wing of living books, each rewriting itself as kingdoms fall asleep.",
-    tone: "terracotta" as const,
-    chapters: 18,
-    comments: 124,
-  },
-  {
-    title: "Letters from Amberfall",
-    author: "Theo Maren",
-    genre: "Romance",
-    description:
-      "Two rival columnists trade anonymous letters in a city where every promise is bound in gold ink.",
-    tone: "gold" as const,
-    chapters: 12,
-    comments: 87,
-  },
-  {
-    title: "After the Ninth Moon",
-    author: "Sana Rook",
-    genre: "Sci-Fi",
-    description:
-      "A generation ship librarian curates the last myths of Earth while teaching a new world how to dream.",
-    tone: "library" as const,
-    chapters: 24,
-    comments: 203,
-  },
-];
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -48,18 +16,19 @@ export default function Home() {
         <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
           <div className="max-w-3xl">
             <Badge className="mb-6 rounded-full bg-accent text-accent-foreground">
-              Premium story publishing for modern authors
+              Premium digital library for modern authors
             </Badge>
             <h1 className="text-5xl font-semibold leading-[1.02] text-foreground sm:text-6xl lg:text-7xl">
-              Write, publish, and discover stories with a literary soul.
+              Write serial stories that feel like beautiful books.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-              StoryVerse is a warm digital library and writing studio for novels,
-              chapters, reader comments, and future AI-assisted creative editing.
+              StoryVerse brings drafting, book-style publishing, reader notes,
+              and future AI-enhanced editing into one warm, editorial home for
+              storytellers.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="h-12 rounded-full px-6 text-base">
-                <Link href="#stories">
+                <Link href="/books">
                   Explore Stories
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
@@ -70,16 +39,31 @@ export default function Home() {
                 size="lg"
                 className="h-12 rounded-full border-border/80 bg-card/70 px-6 text-base shadow-sm"
               >
-                <Link href="#write">
+                <Link href="#">
                   Start Writing
                   <PenLine className="size-4" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
+            <div className="mt-10 grid max-w-xl grid-cols-3 gap-3 text-sm">
+              <div className="rounded-xl border border-border/70 bg-card/65 p-3">
+                <p className="font-semibold text-foreground">6</p>
+                <p className="mt-1 text-muted-foreground">sample books</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/65 p-3">
+                <p className="font-semibold text-foreground">100+</p>
+                <p className="mt-1 text-muted-foreground">chapters</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/65 p-3">
+                <p className="font-semibold text-foreground">710</p>
+                <p className="mt-1 text-muted-foreground">reader notes</p>
+              </div>
+            </div>
           </div>
 
           <div className="relative mx-auto w-full max-w-md lg:mr-0">
-            <div className="rounded-[2rem] border border-border/80 bg-card/80 p-5 shadow-[0_30px_90px_oklch(0.205_0.023_52.2_/_0.14)] backdrop-blur">
+            <div className="absolute -inset-4 rounded-[2.5rem] bg-accent/20 blur-3xl" />
+            <div className="relative rounded-[2rem] border border-border/80 bg-card/80 p-5 shadow-[0_30px_90px_oklch(0.205_0.023_52.2_/_0.14)] backdrop-blur">
               <div className="rounded-[1.5rem] bg-library p-6 text-library-foreground">
                 <div className="flex items-center justify-between border-b border-white/15 pb-5">
                   <div>
@@ -110,54 +94,37 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="stories" className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8">
-          <SectionHeading
-            eyebrow="Featured shelf"
-            title="Book-style discovery for every unfolding world"
-            description="A placeholder glimpse at how published stories can feel collectible, editorial, and ready for reader conversation."
-          />
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {featuredBooks.map((book) => (
-              <BookCard key={book.title} {...book} />
-            ))}
-          </div>
-        </section>
+        <FeaturedShelf />
+        <HowItWorks />
+        <AiPreviewPanel />
 
-        <section id="ai" className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-8" aria-labelledby="ai-heading">
-          <div className="grid gap-8 rounded-[2rem] border border-border/80 bg-parchment/80 p-6 shadow-[0_20px_70px_oklch(0.205_0.023_52.2_/_0.08)] sm:p-8 lg:grid-cols-[0.75fr_1fr] lg:items-center">
-            <div className="flex size-16 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-              <Sparkles className="size-7" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
-                Coming soon
+        <section id="write" className="mx-auto w-full max-w-6xl px-5 pb-20 pt-8 sm:px-8">
+          <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-library p-6 text-library-foreground shadow-[0_24px_70px_oklch(0.205_0.023_52.2_/_0.14)] sm:p-8 md:p-10">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+                Start the next shelf
               </p>
-              <h2 id="ai-heading" className="mt-3 text-3xl font-semibold leading-tight text-foreground">
-                AI writing enhancement, built for creative control.
+              <h2 className="mt-4 text-3xl font-semibold leading-tight sm:text-4xl">
+                Build a story world readers can return to chapter after chapter.
               </h2>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
-                StoryVerse will later help authors refine prose, strengthen
-                scenes, and explore suggestions while keeping the writer in
-                charge of every chapter.
+              <p className="mt-4 text-base leading-7 text-white/70">
+                The portfolio foundation is ready for author workspaces,
+                chapter publishing, comments, and AI tools when the app moves
+                beyond static sample data.
               </p>
             </div>
-          </div>
-        </section>
-
-        <section id="write" className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-8">
-          <div className="flex flex-col items-start justify-between gap-6 border-t border-border/80 pt-8 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">
-                The full app is next. The foundation is ready.
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Author workspaces, chapter publishing, comments, and AI tools can
-                build on this visual system.
-              </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild className="h-11 rounded-full bg-gold px-5 text-primary hover:bg-gold/90">
+                <Link href="/books">Explore Stories</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 rounded-full border-white/20 bg-white/10 px-5 text-white hover:bg-white/15 hover:text-white"
+              >
+                <Link href="#">Start Writing</Link>
+              </Button>
             </div>
-            <Button asChild className="rounded-full px-5">
-              <Link href="#stories">Explore Stories</Link>
-            </Button>
           </div>
         </section>
       </main>
