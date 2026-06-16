@@ -107,8 +107,19 @@ export default async function StudioPage() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-border/75 bg-card/85 p-5 text-sm leading-6 text-muted-foreground shadow-[0_18px_50px_oklch(0.205_0.023_52.2_/_0.06)]">
-                  No stories yet. Create a first draft to start the author shelf.
+                <div className="rounded-[1.5rem] border border-border/75 bg-card/85 p-6 shadow-[0_18px_50px_oklch(0.205_0.023_52.2_/_0.06)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+                    Empty shelf
+                  </p>
+                  <h3 className="mt-3 text-2xl font-semibold text-foreground">
+                    Start by creating your first story in Studio.
+                  </h3>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+                    Drafts stay private until they are published. The public library will remain empty until a story is ready.
+                  </p>
+                  <Button asChild className="mt-5 rounded-full px-5">
+                    <Link href="/studio/editor">Create First Story</Link>
+                  </Button>
                 </div>
               )}
             </div>

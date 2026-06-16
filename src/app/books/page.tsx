@@ -1,4 +1,5 @@
-import { Filter, Search } from "lucide-react";
+import Link from "next/link";
+import { BookOpenCheck, Filter, Search } from "lucide-react";
 
 import { BookCard } from "@/components/book-card";
 import { SectionHeading } from "@/components/section-heading";
@@ -58,11 +59,31 @@ export default async function BooksPage() {
         </section>
 
         <section className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-8">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {stories.map((story) => (
-              <BookCard key={story.id} story={story} variant="discovery" />
-            ))}
-          </div>
+          {stories.length ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {stories.map((story) => (
+                <BookCard key={story.id} story={story} variant="discovery" />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[1.5rem] border border-border/80 bg-card/85 p-6 text-center shadow-[0_18px_50px_oklch(0.205_0.023_52.2_/_0.06)] sm:p-10">
+              <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                <BookOpenCheck className="size-5" aria-hidden="true" />
+              </span>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+                No published books yet
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold text-foreground">
+                The shelf is waiting for its first story.
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+                Published stories will appear here as soon as the author moves a draft from Studio to the public library.
+              </p>
+              <Button asChild className="mt-6 rounded-full px-5">
+                <Link href="/studio">Start by creating your first story in Studio</Link>
+              </Button>
+            </div>
+          )}
         </section>
       </main>
     </div>

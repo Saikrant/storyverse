@@ -47,15 +47,15 @@ export default function Home() {
             </div>
             <div className="mt-10 grid max-w-xl grid-cols-3 gap-3 text-sm">
               <div className="rounded-xl border border-border/70 bg-card/65 p-3">
-                <p className="font-semibold text-foreground">6</p>
-                <p className="mt-1 text-muted-foreground">sample books</p>
+                <p className="font-semibold text-foreground">Draft</p>
+                <p className="mt-1 text-muted-foreground">privately</p>
               </div>
               <div className="rounded-xl border border-border/70 bg-card/65 p-3">
-                <p className="font-semibold text-foreground">100+</p>
-                <p className="mt-1 text-muted-foreground">chapters</p>
+                <p className="font-semibold text-foreground">Publish</p>
+                <p className="mt-1 text-muted-foreground">as books</p>
               </div>
               <div className="rounded-xl border border-border/70 bg-card/65 p-3">
-                <p className="font-semibold text-foreground">710</p>
+                <p className="font-semibold text-foreground">Review</p>
                 <p className="mt-1 text-muted-foreground">reader notes</p>
               </div>
             </div>
@@ -76,18 +76,17 @@ export default function Home() {
                 </div>
                 <div className="space-y-4 py-7 text-sm leading-7 text-white/75">
                   <p>
-                    The library held its breath as Elian opened the book that no
-                    reader had ever finished.
+                    Paste a chapter, shape the details, and keep it private until
+                    the story is ready for readers.
                   </p>
                   <p>
-                    In the margin, a stranger had left a question in copper ink:
-                    what ending would you choose?
+                    When it is published, every chapter becomes part of a polished
+                    reading surface.
                   </p>
                 </div>
                 <div className="rounded-2xl bg-white/10 p-4 text-sm text-white/75">
                   <span className="font-medium text-white">Reader note:</span>{" "}
-                  The tension here is excellent. Consider giving Elian one more
-                  sensory detail before the reveal.
+                  This scene stayed with me. I would love to read the next chapter.
                 </div>
               </div>
             </div>
@@ -108,9 +107,8 @@ export default function Home() {
                 Build a story world readers can return to chapter after chapter.
               </h2>
               <p className="mt-4 text-base leading-7 text-white/70">
-                The portfolio foundation is ready for author workspaces,
-                chapter publishing, comments, and AI tools when the app moves
-                beyond static sample data.
+                The author workspace is ready for private drafts, chapter organization,
+                public publishing, and reader notes when the first real story is ready.
               </p>
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
