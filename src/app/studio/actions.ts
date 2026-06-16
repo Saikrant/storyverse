@@ -372,3 +372,55 @@ export async function deleteChapter(
 
   return { message: "Chapter deleted." };
 }
+
+export async function toggleReaderNoteHelpful(
+  storyId: string,
+  commentId: string,
+  _prevState: StoryEditorActionState,
+  _formData: FormData
+): Promise<StoryEditorActionState> {
+  void _prevState;
+  void _formData;
+
+  const author = await requireAuthor(`/studio/stories/${storyId}/edit`);
+  const story = await getAuthorStory(storyId, author.id);
+
+  if (!story) {
+    return { error: "Story not found for this author." };
+  }
+
+  const comment = await prisma.comment.findFirst({
+    where: {
+      id: commentId,
+      storyId: story.id,
+    },
+    select: {
+      id: true,
+      isHelpful: true,
+    },
+  });
+
+  if (!comment) {
+    return { error: "Reader note not found for this story." };
+  }
+
+  const updatedComment = await prisma.comment.update({
+    where: {
+      id: comment.id,
+    },
+    data: {
+      isHelpful: !comment.isHelpful,
+    },
+    select: {
+      isHelpful: true,
+    },
+  });
+
+  revalidateStoryWorkflows(story.id, story.slug);
+
+  return {
+    message: updatedComment.isHelpful
+      ? "Reader note marked helpful."
+      : "Reader note unmarked.",
+  };
+}

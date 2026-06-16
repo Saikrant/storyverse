@@ -2,7 +2,13 @@ import { StoryStatus as PrismaStoryStatus } from "@prisma/client";
 import { connection } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import type { CoverTheme, SampleStory, StoryChapter, StoryStatus } from "@/lib/sample-stories";
+import type {
+  CoverTheme,
+  ReaderNote,
+  SampleStory,
+  StoryChapter,
+  StoryStatus,
+} from "@/lib/sample-stories";
 
 type StoryQueryOptions = {
   deferToRequest?: boolean;
@@ -44,6 +50,15 @@ function mapChapter(chapter: {
   chapterNumber: number;
   content: string;
   estimatedReadTime: string | null;
+  comments?: {
+    id: string;
+    content: string;
+    isHelpful: boolean;
+    createdAt: Date;
+    user: {
+      name: string;
+    } | null;
+  }[];
 }): StoryChapter {
   return {
     id: chapter.id,
@@ -51,6 +66,25 @@ function mapChapter(chapter: {
     chapterNumber: chapter.chapterNumber,
     content: chapter.content,
     estimatedReadTime: chapter.estimatedReadTime ?? "Preview chapter",
+    readerNotes: chapter.comments?.map(mapReaderNote) ?? [],
+  };
+}
+
+function mapReaderNote(comment: {
+  id: string;
+  content: string;
+  isHelpful: boolean;
+  createdAt: Date;
+  user: {
+    name: string;
+  } | null;
+}): ReaderNote {
+  return {
+    id: comment.id,
+    reader: comment.user?.name ?? "Anonymous reader",
+    content: comment.content,
+    isHelpful: comment.isHelpful,
+    createdAt: comment.createdAt.toISOString(),
   };
 }
 
@@ -71,6 +105,15 @@ function mapStory(story: {
     chapterNumber: number;
     content: string;
     estimatedReadTime: string | null;
+    comments?: {
+      id: string;
+      content: string;
+      isHelpful: boolean;
+      createdAt: Date;
+      user: {
+        name: string;
+      } | null;
+    }[];
   }[];
   _count: {
     chapters: number;
@@ -119,6 +162,21 @@ export async function getPublishedStories(options?: StoryQueryOptions) {
         },
       },
       chapters: {
+        include: {
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 12,
+          },
+        },
         orderBy: {
           chapterNumber: "asc",
         },
@@ -153,6 +211,21 @@ export async function getStoryBySlug(slug: string, options?: StoryQueryOptions) 
         },
       },
       chapters: {
+        include: {
+          comments: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 12,
+          },
+        },
         orderBy: {
           chapterNumber: "asc",
         },

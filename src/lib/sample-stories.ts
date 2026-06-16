@@ -8,6 +8,17 @@ export type StoryChapter = {
   chapterNumber: number;
   content: string;
   estimatedReadTime: string;
+  readerNotes?: ReaderNote[];
+};
+
+export type ReaderNote = {
+  id: string;
+  reader: string;
+  content: string;
+  isHelpful: boolean;
+  createdAt: string;
+  chapterTitle?: string;
+  chapterNumber?: number;
 };
 
 export type SampleStory = {

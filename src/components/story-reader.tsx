@@ -102,7 +102,7 @@ export function StoryReader({ story }: StoryReaderProps) {
         />
       </section>
 
-      <ReaderNotes story={story} chapter={chapter} />
+      <ReaderNotes key={chapter.id} story={story} chapter={chapter} />
     </main>
   );
 }

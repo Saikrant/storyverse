@@ -32,7 +32,10 @@ export function RecentNotes({ notes }: RecentNotesProps) {
                 <p className="text-sm font-semibold text-foreground">{note.reader}</p>
                 <p className="text-xs text-muted-foreground">{note.receivedAt}</p>
               </div>
-              <p className="mt-1 text-xs font-medium text-terracotta">{note.storyTitle}</p>
+              <p className="mt-1 text-xs font-medium text-terracotta">
+                {note.storyTitle}
+                {note.chapterTitle ? ` / ${note.chapterTitle}` : ""}
+              </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{note.excerpt}</p>
             </div>
           </article>

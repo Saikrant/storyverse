@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Eye, Plus, Save, Send, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BookOpen, Eye, MessageCircle, Plus, Save, Send, Star, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
   createChapter,
   deleteChapter,
+  toggleReaderNoteHelpful,
   updateChapter,
   updateStoryDetails,
   type StoryEditorActionState,
@@ -17,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { EditableChapter, EditableStory } from "@/lib/data/studio";
+import type { EditableChapter, EditableStory, StudioFeedbackNote } from "@/lib/data/studio";
 
 type StoryManagementFormProps = {
   story: EditableStory;
@@ -57,6 +59,23 @@ function SubmitButton({
     <Button type="submit" variant={variant} className={className} disabled={pending}>
       {children}
       {pending ? "Saving..." : null}
+    </Button>
+  );
+}
+
+function HelpfulButton({ helpful }: { helpful: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      variant={helpful ? "default" : "outline"}
+      size="sm"
+      className="rounded-full bg-background/70"
+      disabled={pending}
+    >
+      <Star className="size-3.5" aria-hidden="true" />
+      {pending ? "Saving..." : helpful ? "Helpful" : "Mark helpful"}
     </Button>
   );
 }
@@ -379,6 +398,118 @@ function StoryPreview({ story }: { story: EditableStory }) {
   );
 }
 
+function FeedbackNote({
+  storyId,
+  note,
+}: {
+  storyId: string;
+  note: StudioFeedbackNote;
+}) {
+  const router = useRouter();
+  const [state, action] = useActionState(
+    toggleReaderNoteHelpful.bind(null, storyId, note.id),
+    initialActionState
+  );
+
+  useEffect(() => {
+    if (state.message && !state.error) {
+      router.refresh();
+    }
+  }, [router, state]);
+
+  return (
+    <article className="rounded-2xl border border-border/70 bg-background/60 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-foreground">{note.reader}</p>
+            <p className="text-xs text-muted-foreground">{note.receivedAt}</p>
+            {note.isHelpful ? (
+              <Badge className="rounded-full bg-accent text-accent-foreground">Helpful</Badge>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs font-medium text-terracotta">
+            {note.chapterTitle
+              ? `Chapter ${note.chapterNumber}: ${note.chapterTitle}`
+              : "Story-level note"}
+          </p>
+        </div>
+        <form action={action}>
+          <HelpfulButton helpful={note.isHelpful} />
+        </form>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">{note.content}</p>
+      <ActionMessage state={state} />
+    </article>
+  );
+}
+
+function ReaderFeedbackPanel({ story }: { story: EditableStory }) {
+  const notesByChapter = story.readerNotes.reduce<Record<string, StudioFeedbackNote[]>>(
+    (groups, note) => {
+      const key = note.chapterId ?? "story";
+      groups[key] = [...(groups[key] ?? []), note];
+      return groups;
+    },
+    {}
+  );
+
+  return (
+    <section className="rounded-[1.5rem] border border-border/80 bg-card/85 p-5 shadow-[0_20px_60px_oklch(0.205_0.023_52.2_/_0.08)] sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+            Reader notes
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">Feedback from the margins</h2>
+        </div>
+        <Badge variant="outline" className="w-fit rounded-full bg-background/70">
+          {story.readerNotes.length} {story.readerNotes.length === 1 ? "note" : "notes"}
+        </Badge>
+      </div>
+
+      {story.readerNotes.length ? (
+        <div className="mt-5 space-y-5">
+          {story.chapters.map((chapter) => {
+            const notes = notesByChapter[chapter.id] ?? [];
+
+            if (!notes.length) {
+              return null;
+            }
+
+            return (
+              <div key={chapter.id} className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <MessageCircle className="size-4 text-terracotta" aria-hidden="true" />
+                  Chapter {chapter.chapterNumber}: {chapter.title}
+                </div>
+                {notes.map((note) => (
+                  <FeedbackNote key={note.id} storyId={story.id} note={note} />
+                ))}
+              </div>
+            );
+          })}
+          {(notesByChapter.story ?? []).length ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <MessageCircle className="size-4 text-terracotta" aria-hidden="true" />
+                Story-level notes
+              </div>
+              {notesByChapter.story.map((note) => (
+                <FeedbackNote key={note.id} storyId={story.id} note={note} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-5 rounded-2xl bg-background/70 p-4 text-sm leading-6 text-muted-foreground">
+          Reader feedback will appear here after this story receives public notes.
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function StoryManagementForm({ story }: StoryManagementFormProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_25rem]">
@@ -407,6 +538,7 @@ export function StoryManagementForm({ story }: StoryManagementFormProps) {
           )}
         </section>
         <AddChapterForm storyId={story.id} />
+        <ReaderFeedbackPanel story={story} />
       </div>
       <div className="lg:sticky lg:top-6 lg:self-start">
         <StoryPreview story={story} />

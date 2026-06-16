@@ -28,8 +28,20 @@ export type StudioNote = {
   id: string;
   reader: string;
   storyTitle: string;
+  chapterTitle: string | null;
   excerpt: string;
   receivedAt: string;
+};
+
+export type StudioFeedbackNote = {
+  id: string;
+  reader: string;
+  content: string;
+  isHelpful: boolean;
+  receivedAt: string;
+  chapterId: string | null;
+  chapterTitle: string | null;
+  chapterNumber: number | null;
 };
 
 export type EditableChapter = {
@@ -52,6 +64,7 @@ export type EditableStory = {
   coverTheme: string;
   status: StoryStatus;
   chapters: EditableChapter[];
+  readerNotes: StudioFeedbackNote[];
 };
 
 function formatStatus(status: StoryStatus): StudioStoryStatus {
@@ -148,6 +161,11 @@ export async function getStudioDashboard(authorId: string) {
             title: true,
           },
         },
+        chapter: {
+          select: {
+            title: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -200,8 +218,9 @@ export async function getStudioDashboard(authorId: string) {
     })),
     notes: recentComments.map<StudioNote>((comment) => ({
       id: comment.id,
-      reader: comment.user?.name ?? "Reader",
+      reader: comment.user?.name ?? "Anonymous reader",
       storyTitle: comment.story.title,
+      chapterTitle: comment.chapter?.title ?? null,
       excerpt: comment.content,
       receivedAt: relativeDate(comment.createdAt).replace("Updated", "Received"),
     })),
@@ -225,6 +244,25 @@ export async function getEditableStory(authorId: string, storyId: string) {
         },
         orderBy: {
           chapterNumber: "asc",
+        },
+      },
+      comments: {
+        include: {
+          user: {
+            select: {
+              name: true,
+            },
+          },
+          chapter: {
+            select: {
+              id: true,
+              title: true,
+              chapterNumber: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       },
     },
@@ -251,6 +289,16 @@ export async function getEditableStory(authorId: string, storyId: string) {
       estimatedReadTime: chapter.estimatedReadTime,
       wordCount: countWords(chapter.content),
       commentCount: chapter._count.comments,
+    })),
+    readerNotes: story.comments.map<StudioFeedbackNote>((comment) => ({
+      id: comment.id,
+      reader: comment.user?.name ?? "Anonymous reader",
+      content: comment.content,
+      isHelpful: comment.isHelpful,
+      receivedAt: relativeDate(comment.createdAt).replace("Updated", "Received"),
+      chapterId: comment.chapter?.id ?? null,
+      chapterTitle: comment.chapter?.title ?? null,
+      chapterNumber: comment.chapter?.chapterNumber ?? null,
     })),
   } satisfies EditableStory;
 }
