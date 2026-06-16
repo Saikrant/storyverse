@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  AUTHOR
+  READER
+  ADMIN
+}
+
+enum StoryStatus {
+  DRAFT
+  PUBLISHED
+  NEEDS_REVIEW
+}
+
+enum EnhancementType {
+  GRAMMAR
+  FLOW
+  EMOTIONAL
+  TITLE
+  SUMMARY
+  NEXT_IDEAS
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  image     String?
+  role      UserRole @default(READER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stories  Story[]
+  comments Comment[]
+
+  @@map("users")
+}
+
+model Story {
+  id          String      @id @default(cuid())
+  authorId    String
+  title       String
+  slug        String      @unique
+  description String
+  genre       String
+  coverImage  String?
+  coverTheme  String?
+  status      StoryStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  chapters     Chapter[]
+  comments     Comment[]
+  enhancements Enhancement[]
+
+  @@index([authorId])
+  @@index([status])
+  @@map("stories")
+}
+
+model Chapter {
+  id                String   @id @default(cuid())
+  storyId           String
+  title             String
+  chapterNumber     Int
+  content           String
+  estimatedReadTime String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  story        Story         @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+  enhancements Enhancement[]
+
+  @@unique([storyId, chapterNumber])
+  @@index([storyId])
+  @@map("chapters")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String?
+  storyId   String
+  chapterId String?
+  content   String
+  isHelpful Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  story   Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([storyId])
+  @@index([chapterId])
+  @@map("comments")
+}
+
+model Enhancement {
+  id           String          @id @default(cuid())
+  storyId      String?
+  chapterId    String?
+  type         EnhancementType
+  originalText String
+  enhancedText String
+  createdAt    DateTime        @default(now())
+
+  story   Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@index([storyId])
+  @@index([chapterId])
+  @@index([type])
+  @@map("enhancements")
+}

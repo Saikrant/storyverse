@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StoryVerse
+
+StoryVerse is a Next.js App Router project for a premium story publishing and reading experience. The current UI uses static sample data for the homepage, library, story detail pages, reader, Studio dashboard, and editor.
+
+The Prisma database layer is prepared for the next phase, but the UI is intentionally not connected to Prisma yet.
 
 ## Getting Started
 
@@ -6,19 +10,60 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+StoryVerse is PostgreSQL-ready through Prisma. The app does not require a real `DATABASE_URL` for `npm run build` because the current UI still renders from static sample data.
+
+1. Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Update `.env` with your PostgreSQL connection string:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+```
+
+Do not commit `.env`; it is ignored by git. `.env.example` is committed as the safe template.
+
+3. Generate the Prisma client:
+
+```bash
+npm run prisma:generate
+```
+
+4. Create and apply a migration:
+
+```bash
+npm run prisma:migrate
+```
+
+5. Seed the database with sample StoryVerse data:
+
+```bash
+npm run prisma:seed
+```
+
+6. Optionally inspect the database:
+
+```bash
+npm run prisma:studio
+```
+
+## Current Data Flow
+
+- `src/lib/sample-stories.ts` powers the public story UI.
+- `src/lib/studio-sample.ts` powers the Studio preview UI.
+- `prisma/schema.prisma` and `prisma/seed.ts` prepare the database foundation for a later integration pass.
+- `src/lib/prisma.ts` exposes a safe Prisma client singleton for future server-side data access.
+
+Authentication, real AI enhancement calls, and form persistence are intentionally not implemented yet.
 
 ## Learn More
 
