@@ -39,7 +39,7 @@ export default function Home() {
                 size="lg"
                 className="h-12 rounded-full border-border/80 bg-card/70 px-6 text-base shadow-sm"
               >
-                <Link href="#">
+                <Link href="/studio/editor">
                   Start Writing
                   <PenLine className="size-4" aria-hidden="true" />
                 </Link>
@@ -122,7 +122,7 @@ export default function Home() {
                 variant="outline"
                 className="h-11 rounded-full border-white/20 bg-white/10 px-5 text-white hover:bg-white/15 hover:text-white"
               >
-                <Link href="#">Start Writing</Link>
+                <Link href="/studio/editor">Start Writing</Link>
               </Button>
             </div>
           </div>

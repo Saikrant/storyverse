@@ -17,7 +17,7 @@ export function SiteHeader() {
           <Link href="/books" className="transition-colors hover:text-foreground">
             Stories
           </Link>
-          <Link href="#" className="transition-colors hover:text-foreground">
+          <Link href="/studio" className="transition-colors hover:text-foreground">
             Studio
           </Link>
           <Link href="/#ai" className="transition-colors hover:text-foreground">
@@ -25,7 +25,7 @@ export function SiteHeader() {
           </Link>
         </nav>
         <Button asChild size="sm" className="rounded-full px-4">
-          <Link href="#">Start Writing</Link>
+          <Link href="/studio/editor">Start Writing</Link>
         </Button>
       </div>
     </header>

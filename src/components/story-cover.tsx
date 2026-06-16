@@ -40,21 +40,26 @@ export function StoryCover({
       <div className="absolute inset-4 rounded-sm border border-white/22" />
       <div className="absolute inset-x-8 top-10 h-px bg-white/45" />
       <div className="absolute inset-x-10 top-14 h-px bg-white/30" />
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="pl-4">
+      <div className="relative z-10 flex h-full min-w-0 flex-col justify-between">
+        <div className="min-w-0 pl-4">
           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-white/70">
             StoryVerse
           </p>
         </div>
-        <div className="space-y-3 pl-4">
-          <h3 className={cn("font-heading font-semibold leading-tight", compact ? "text-lg" : "text-3xl")}>
+        <div className="min-w-0 space-y-3 pl-4">
+          <h3
+            className={cn(
+              "break-words font-heading font-semibold leading-tight [hyphens:auto] [overflow-wrap:anywhere] [text-wrap:balance]",
+              compact ? "line-clamp-4 text-[0.95rem]" : "line-clamp-5 text-3xl"
+            )}
+          >
             {title}
           </h3>
           {!compact ? (
             <p className="max-w-40 text-xs leading-5 text-white/70">{accent}</p>
           ) : null}
         </div>
-        <p className="pl-4 text-xs text-white/75">by {author}</p>
+        <p className="min-w-0 truncate pl-4 text-xs text-white/75">by {author}</p>
       </div>
     </div>
   );
