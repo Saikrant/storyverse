@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight, Clock3 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,10 +38,33 @@ export function StudioStoryCard({ story }: StudioStoryCardProps) {
           <Clock3 className="size-3.5" aria-hidden="true" />
           {story.updatedAt}
         </p>
-        <Button variant="ghost" size="sm" className="rounded-full px-2 text-terracotta">
-          Open
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button asChild variant="outline" size="sm" className="rounded-full bg-background/70">
+            <Link href={`/studio/stories/${story.id}/edit`}>Edit</Link>
+          </Button>
+          {story.status === "Published" ? (
+            <>
+              <Button asChild variant="ghost" size="sm" className="rounded-full px-2 text-terracotta">
+                <Link href={`/books/${story.slug}`}>
+                  Public
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-full px-2 text-terracotta">
+                <Link href={`/books/${story.slug}/read`}>Preview</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="rounded-full px-2 text-terracotta">
+                <Link href={`/studio/stories/${story.id}/edit#preview`}>Preview</Link>
+              </Button>
+              <span className="rounded-full bg-secondary px-3 py-1.5 text-xs text-secondary-foreground">
+                Private draft
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </article>
   );

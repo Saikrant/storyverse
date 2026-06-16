@@ -8,6 +8,7 @@ export type StudioStoryStatus = "Draft" | "Published" | "Needs Review";
 
 export type StudioStory = {
   id: string;
+  slug: string;
   title: string;
   genre: string;
   status: StudioStoryStatus;
@@ -29,6 +30,28 @@ export type StudioNote = {
   storyTitle: string;
   excerpt: string;
   receivedAt: string;
+};
+
+export type EditableChapter = {
+  id: string;
+  title: string;
+  chapterNumber: number;
+  content: string;
+  estimatedReadTime: string | null;
+  wordCount: number;
+  commentCount: number;
+};
+
+export type EditableStory = {
+  id: string;
+  slug: string;
+  title: string;
+  genre: string;
+  description: string;
+  coverDirection: string;
+  coverTheme: string;
+  status: StoryStatus;
+  chapters: EditableChapter[];
 };
 
 function formatStatus(status: StoryStatus): StudioStoryStatus {
@@ -71,6 +94,10 @@ function relativeDate(date: Date) {
 
   const diffDays = Math.floor(diffHours / 24);
   return `Updated ${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
+function countWords(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
 }
 
 export async function getStudioDashboard(authorId: string) {
@@ -160,6 +187,7 @@ export async function getStudioDashboard(authorId: string) {
     stats,
     stories: stories.map<StudioStory>((story) => ({
       id: story.id,
+      slug: story.slug,
       title: story.title,
       genre: story.genre,
       status: formatStatus(story.status),
@@ -178,4 +206,51 @@ export async function getStudioDashboard(authorId: string) {
       receivedAt: relativeDate(comment.createdAt).replace("Updated", "Received"),
     })),
   };
+}
+
+export async function getEditableStory(authorId: string, storyId: string) {
+  const story = await prisma.story.findFirst({
+    where: {
+      id: storyId,
+      authorId,
+    },
+    include: {
+      chapters: {
+        include: {
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
+        },
+        orderBy: {
+          chapterNumber: "asc",
+        },
+      },
+    },
+  });
+
+  if (!story) {
+    return null;
+  }
+
+  return {
+    id: story.id,
+    slug: story.slug,
+    title: story.title,
+    genre: story.genre,
+    description: story.description,
+    coverDirection: story.coverImage ?? "",
+    coverTheme: story.coverTheme ?? "terracotta",
+    status: story.status,
+    chapters: story.chapters.map<EditableChapter>((chapter) => ({
+      id: chapter.id,
+      title: chapter.title,
+      chapterNumber: chapter.chapterNumber,
+      content: chapter.content,
+      estimatedReadTime: chapter.estimatedReadTime,
+      wordCount: countWords(chapter.content),
+      commentCount: chapter._count.comments,
+    })),
+  } satisfies EditableStory;
 }

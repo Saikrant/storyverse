@@ -84,7 +84,7 @@ export default async function StudioPage() {
                     </p>
                   </div>
                   <Button asChild className="h-11 rounded-full bg-gold px-5 text-primary hover:bg-gold/90">
-                    <Link href="/studio/editor">
+                    <Link href={`/studio/stories/${continueStory.id}/edit`}>
                       Resume Draft
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </Link>

@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 
 export type StoryEditorActionState = {
   error?: string;
+  message?: string;
 };
 
 const coverThemes = ["terracotta", "gold", "library", "olive", "rose", "ink"] as const;
@@ -55,6 +56,35 @@ function normalizeCoverTheme(value: string) {
     : "terracotta";
 }
 
+function normalizeStoryStatus(value: string) {
+  return value === StoryStatus.PUBLISHED ? StoryStatus.PUBLISHED : StoryStatus.DRAFT;
+}
+
+async function getAuthorStory(storyId: string, authorId: string) {
+  return prisma.story.findFirst({
+    where: {
+      id: storyId,
+      authorId,
+    },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+    },
+  });
+}
+
+function revalidateStoryWorkflows(storyId: string, slug?: string) {
+  revalidatePath("/studio");
+  revalidatePath(`/studio/stories/${storyId}/edit`);
+  revalidatePath("/books");
+
+  if (slug) {
+    revalidatePath(`/books/${slug}`);
+    revalidatePath(`/books/${slug}/read`);
+  }
+}
+
 export async function logoutAuthor() {
   await clearAuthorSession();
   redirect("/author/login");
@@ -89,7 +119,7 @@ export async function createStory(
   const slug = await getUniqueSlug(title);
   const status = intent === "publish" ? StoryStatus.PUBLISHED : StoryStatus.DRAFT;
 
-  await prisma.story.create({
+  const story = await prisma.story.create({
     data: {
       authorId: author.id,
       title,
@@ -117,5 +147,228 @@ export async function createStory(
     redirect(`/books/${slug}`);
   }
 
-  redirect("/studio");
+  redirect(`/studio/stories/${story.id}/edit`);
+}
+
+export async function updateStoryDetails(
+  storyId: string,
+  _prevState: StoryEditorActionState,
+  formData: FormData
+): Promise<StoryEditorActionState> {
+  const author = await requireAuthor(`/studio/stories/${storyId}/edit`);
+  const story = await getAuthorStory(storyId, author.id);
+
+  if (!story) {
+    return { error: "Story not found for this author." };
+  }
+
+  const title = getStringValue(formData, "title");
+  const genre = getStringValue(formData, "genre") || "Fantasy";
+  const description = getStringValue(formData, "description");
+  const coverDirection = getStringValue(formData, "coverDirection");
+  const coverTheme = normalizeCoverTheme(getStringValue(formData, "coverTheme"));
+  const status = normalizeStoryStatus(getStringValue(formData, "status"));
+
+  if (!title) {
+    return { error: "Story title is required." };
+  }
+
+  await prisma.story.update({
+    where: {
+      id: story.id,
+    },
+    data: {
+      title,
+      genre,
+      description,
+      coverImage: coverDirection || null,
+      coverTheme,
+      status,
+    },
+  });
+
+  revalidateStoryWorkflows(story.id, story.slug);
+
+  return {
+    message: status === StoryStatus.PUBLISHED ? "Story saved and published." : "Story saved as a private draft.",
+  };
+}
+
+export async function createChapter(
+  storyId: string,
+  _prevState: StoryEditorActionState,
+  formData: FormData
+): Promise<StoryEditorActionState> {
+  const author = await requireAuthor(`/studio/stories/${storyId}/edit`);
+  const story = await getAuthorStory(storyId, author.id);
+
+  if (!story) {
+    return { error: "Story not found for this author." };
+  }
+
+  const title = getStringValue(formData, "chapterTitle");
+  const content = getStringValue(formData, "chapterContent");
+
+  if (!title) {
+    return { error: "Chapter title is required." };
+  }
+
+  if (!content) {
+    return { error: "Chapter content is required." };
+  }
+
+  const lastChapter = await prisma.chapter.findFirst({
+    where: {
+      storyId: story.id,
+    },
+    orderBy: {
+      chapterNumber: "desc",
+    },
+    select: {
+      chapterNumber: true,
+    },
+  });
+
+  await prisma.chapter.create({
+    data: {
+      storyId: story.id,
+      title,
+      content,
+      chapterNumber: (lastChapter?.chapterNumber ?? 0) + 1,
+      estimatedReadTime: getEstimatedReadTime(content),
+    },
+  });
+
+  revalidateStoryWorkflows(story.id, story.slug);
+
+  return { message: "Chapter added." };
+}
+
+export async function updateChapter(
+  storyId: string,
+  chapterId: string,
+  _prevState: StoryEditorActionState,
+  formData: FormData
+): Promise<StoryEditorActionState> {
+  const author = await requireAuthor(`/studio/stories/${storyId}/edit`);
+  const story = await getAuthorStory(storyId, author.id);
+
+  if (!story) {
+    return { error: "Story not found for this author." };
+  }
+
+  const chapter = await prisma.chapter.findFirst({
+    where: {
+      id: chapterId,
+      storyId: story.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!chapter) {
+    return { error: "Chapter not found for this story." };
+  }
+
+  const title = getStringValue(formData, "chapterTitle");
+  const content = getStringValue(formData, "chapterContent");
+
+  if (!title) {
+    return { error: "Chapter title is required." };
+  }
+
+  if (!content) {
+    return { error: "Chapter content is required." };
+  }
+
+  await prisma.chapter.update({
+    where: {
+      id: chapter.id,
+    },
+    data: {
+      title,
+      content,
+      estimatedReadTime: getEstimatedReadTime(content),
+    },
+  });
+
+  revalidateStoryWorkflows(story.id, story.slug);
+
+  return { message: "Chapter saved." };
+}
+
+export async function deleteChapter(
+  storyId: string,
+  chapterId: string,
+  _prevState: StoryEditorActionState,
+  _formData: FormData
+): Promise<StoryEditorActionState> {
+  void _prevState;
+  void _formData;
+
+  const author = await requireAuthor(`/studio/stories/${storyId}/edit`);
+  const story = await getAuthorStory(storyId, author.id);
+
+  if (!story) {
+    return { error: "Story not found for this author." };
+  }
+
+  const [chapter, chapterCount] = await Promise.all([
+    prisma.chapter.findFirst({
+      where: {
+        id: chapterId,
+        storyId: story.id,
+      },
+      include: {
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+    }),
+    prisma.chapter.count({
+      where: {
+        storyId: story.id,
+      },
+    }),
+  ]);
+
+  if (!chapter) {
+    return { error: "Chapter not found for this story." };
+  }
+
+  if (chapterCount <= 1) {
+    return { error: "A story needs at least one chapter." };
+  }
+
+  if (chapter._count.comments > 0) {
+    return { error: "Chapters with reader notes cannot be deleted safely." };
+  }
+
+  await prisma.$transaction([
+    prisma.chapter.delete({
+      where: {
+        id: chapter.id,
+      },
+    }),
+    prisma.chapter.updateMany({
+      where: {
+        storyId: story.id,
+        chapterNumber: {
+          gt: chapter.chapterNumber,
+        },
+      },
+      data: {
+        chapterNumber: {
+          decrement: 1,
+        },
+      },
+    }),
+  ]);
+
+  revalidateStoryWorkflows(story.id, story.slug);
+
+  return { message: "Chapter deleted." };
 }
