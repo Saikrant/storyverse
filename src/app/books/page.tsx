@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sampleStories } from "@/lib/sample-stories";
 
-const genres = ["All", "Fantasy", "Romance", "Sci-Fi", "Mystery", "Literary"];
+const genres = ["All", "Fantasy", "Romance", "Science Fiction", "Mystery", "Literary"];
 
 export default function BooksPage() {
   return (

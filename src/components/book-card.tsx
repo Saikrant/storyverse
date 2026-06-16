@@ -10,21 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { SampleStory, StoryTone } from "@/lib/sample-stories";
+import { StoryCover } from "@/components/story-cover";
+import type { SampleStory } from "@/lib/sample-stories";
 import { cn } from "@/lib/utils";
 
 type BookCardProps = {
   story: SampleStory;
   variant?: "featured" | "discovery";
-};
-
-const toneClasses: Record<StoryTone, string> = {
-  terracotta: "from-terracotta to-primary",
-  gold: "from-gold to-terracotta",
-  library: "from-library to-primary",
-  olive: "from-chart-3 to-primary",
-  rose: "from-accent to-terracotta",
-  ink: "from-primary to-library",
 };
 
 export function BookCard({ story, variant = "featured" }: BookCardProps) {
@@ -37,26 +29,25 @@ export function BookCard({ story, variant = "featured" }: BookCardProps) {
     >
       <CardHeader className="gap-4">
         <div className="flex items-start justify-between gap-4">
-          <div
-            className={cn(
-              "relative shrink-0 overflow-hidden rounded-md bg-linear-to-br shadow-lg",
-              isDiscovery ? "h-40 w-28" : "h-36 w-24",
-              toneClasses[story.tone]
-            )}
-            aria-hidden="true"
-          >
-            <div className="absolute inset-y-0 left-0 w-4 bg-black/15" />
-            <div className="absolute inset-x-4 top-5 h-px bg-white/35" />
-            <div className="absolute inset-x-6 top-8 h-px bg-white/25" />
-            <div className="absolute inset-x-5 bottom-5 h-12 rounded-sm border border-white/35" />
-          </div>
+          <Link href={`/books/${story.slug}`} aria-label={`View ${story.title}`}>
+            <StoryCover
+              theme={story.cover.theme}
+              title={story.title}
+              author={story.author}
+              accent={story.cover.accent}
+              compact
+              className={cn("shrink-0", isDiscovery ? "h-40 w-28" : "h-36 w-24")}
+            />
+          </Link>
           <Badge variant="secondary" className="rounded-full border border-border/70 bg-secondary/80 text-secondary-foreground">
             {story.genre}
           </Badge>
         </div>
         <div>
           <CardTitle className="text-xl font-semibold leading-snug text-foreground">
-            {story.title}
+            <Link href={`/books/${story.slug}`} className="transition-colors hover:text-terracotta">
+              {story.title}
+            </Link>
           </CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">by {story.author}</p>
         </div>
@@ -86,7 +77,7 @@ export function BookCard({ story, variant = "featured" }: BookCardProps) {
         </div>
         {isDiscovery ? (
           <Button asChild className="h-10 rounded-full">
-            <Link href={`/books#${story.slug}`}>Read</Link>
+            <Link href={`/books/${story.slug}/read`}>Read</Link>
           </Button>
         ) : null}
       </CardFooter>
