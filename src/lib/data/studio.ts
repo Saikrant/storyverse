@@ -1,0 +1,181 @@
+import "server-only";
+
+import { StoryStatus } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
+
+export type StudioStoryStatus = "Draft" | "Published" | "Needs Review";
+
+export type StudioStory = {
+  id: string;
+  title: string;
+  genre: string;
+  status: StudioStoryStatus;
+  progress: number;
+  updatedAt: string;
+  chapterLabel: string;
+  note: string;
+};
+
+export type StudioStat = {
+  label: string;
+  value: string;
+  detail: string;
+};
+
+export type StudioNote = {
+  id: string;
+  reader: string;
+  storyTitle: string;
+  excerpt: string;
+  receivedAt: string;
+};
+
+function formatStatus(status: StoryStatus): StudioStoryStatus {
+  if (status === StoryStatus.PUBLISHED) {
+    return "Published";
+  }
+
+  if (status === StoryStatus.NEEDS_REVIEW) {
+    return "Needs Review";
+  }
+
+  return "Draft";
+}
+
+function progressForStatus(status: StoryStatus) {
+  if (status === StoryStatus.PUBLISHED) {
+    return 100;
+  }
+
+  if (status === StoryStatus.NEEDS_REVIEW) {
+    return 78;
+  }
+
+  return 35;
+}
+
+function relativeDate(date: Date) {
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.max(1, Math.floor(diffMs / 60000));
+
+  if (diffMinutes < 60) {
+    return `Updated ${diffMinutes} min ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffHours < 24) {
+    return `Updated ${diffHours} hr ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `Updated ${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
+export async function getStudioDashboard(authorId: string) {
+  const [statusCounts, readerNotesCount, stories, recentComments] = await Promise.all([
+    prisma.story.groupBy({
+      by: ["status"],
+      where: { authorId },
+      _count: {
+        _all: true,
+      },
+    }),
+    prisma.comment.count({
+      where: {
+        story: {
+          authorId,
+        },
+      },
+    }),
+    prisma.story.findMany({
+      where: { authorId },
+      include: {
+        _count: {
+          select: {
+            chapters: true,
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 6,
+    }),
+    prisma.comment.findMany({
+      where: {
+        story: {
+          authorId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        story: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 4,
+    }),
+  ]);
+
+  const countByStatus = new Map(
+    statusCounts.map((count) => [count.status, count._count._all])
+  );
+
+  const stats: StudioStat[] = [
+    {
+      label: "Draft stories",
+      value: String(countByStatus.get(StoryStatus.DRAFT) ?? 0),
+      detail: "Private author workspace",
+    },
+    {
+      label: "Published stories",
+      value: String(countByStatus.get(StoryStatus.PUBLISHED) ?? 0),
+      detail: "Visible in public library",
+    },
+    {
+      label: "Needs review",
+      value: String(countByStatus.get(StoryStatus.NEEDS_REVIEW) ?? 0),
+      detail: "Queued for author polish",
+    },
+    {
+      label: "Reader notes",
+      value: String(readerNotesCount),
+      detail: "Across authored stories",
+    },
+  ];
+
+  return {
+    stats,
+    stories: stories.map<StudioStory>((story) => ({
+      id: story.id,
+      title: story.title,
+      genre: story.genre,
+      status: formatStatus(story.status),
+      progress: progressForStatus(story.status),
+      updatedAt: relativeDate(story.updatedAt),
+      chapterLabel: `${story._count.chapters} chapter${story._count.chapters === 1 ? "" : "s"}`,
+      note:
+        story.description ||
+        `${story._count.comments} reader note${story._count.comments === 1 ? "" : "s"} collected.`,
+    })),
+    notes: recentComments.map<StudioNote>((comment) => ({
+      id: comment.id,
+      reader: comment.user?.name ?? "Reader",
+      storyTitle: comment.story.title,
+      excerpt: comment.content,
+      receivedAt: relativeDate(comment.createdAt).replace("Updated", "Received"),
+    })),
+  };
+}

@@ -1,8 +1,6 @@
 # StoryVerse
 
-StoryVerse is a Next.js App Router project for a premium story publishing and reading experience. The current UI uses static sample data for the homepage, library, story detail pages, reader, Studio dashboard, and editor.
-
-The Prisma database layer is prepared for the next phase, but the UI is intentionally not connected to Prisma yet.
+StoryVerse is a Next.js App Router project for a premium story publishing and reading experience. Public story pages read published stories from Prisma, while Studio is a private author workspace for drafting and publishing stories.
 
 ## Getting Started
 
@@ -16,7 +14,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Database Setup
 
-StoryVerse is PostgreSQL-ready through Prisma. The app does not require a real `DATABASE_URL` for `npm run build` because the current UI still renders from static sample data.
+StoryVerse is PostgreSQL-ready through Prisma. Public library and Studio routes use the configured database at request time.
 
 1. Create a local environment file:
 
@@ -28,6 +26,10 @@ cp .env.example .env
 
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+AUTHOR_NAME="StoryVerse Author"
+AUTHOR_EMAIL="author@storyverse.dev"
+AUTHOR_LOGIN_PASSWORD="set-a-private-password"
+AUTHOR_SESSION_SECRET="set-a-long-random-session-secret"
 ```
 
 Do not commit `.env`; it is ignored by git. `.env.example` is committed as the safe template.
@@ -50,6 +52,8 @@ npm run prisma:migrate
 npm run prisma:seed
 ```
 
+The seed creates fictional demo stories only and one configured AUTHOR user from `AUTHOR_NAME` and `AUTHOR_EMAIL`.
+
 6. Optionally inspect the database:
 
 ```bash
@@ -58,12 +62,15 @@ npm run prisma:studio
 
 ## Current Data Flow
 
-- `src/lib/sample-stories.ts` powers the public story UI.
-- `src/lib/studio-sample.ts` powers the Studio preview UI.
-- `prisma/schema.prisma` and `prisma/seed.ts` prepare the database foundation for a later integration pass.
-- `src/lib/prisma.ts` exposes a safe Prisma client singleton for future server-side data access.
+- `src/lib/data/stories.ts` powers the public library and only returns `PUBLISHED` stories.
+- `src/lib/data/studio.ts` powers the protected Studio dashboard from Prisma.
+- `src/app/studio/actions.ts` creates draft or published stories and first chapters from the Studio editor.
+- `src/lib/auth.ts` provides the MVP author guard using an httpOnly signed cookie.
+- `src/lib/sample-stories.ts` remains fictional demo content for seeding and static homepage shelves.
 
-Authentication, real AI enhancement calls, and form persistence are intentionally not implemented yet.
+Normal visitors can read public stories without logging in. Studio routes redirect to `/author/login` unless the configured author password has unlocked an AUTHOR or ADMIN user session.
+
+Real private story content should be entered later through Studio and stored in the database, not committed to seed files or sample data.
 
 ## Learn More
 

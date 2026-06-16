@@ -4,14 +4,17 @@ import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { StoryEditorForm } from "@/components/story-editor-form";
 import { Button } from "@/components/ui/button";
+import { requireAuthor } from "@/lib/auth";
 
 export const metadata = {
   title: "Story Editor | StoryVerse Studio",
   description:
-    "A static StoryVerse editor preview with local form state, live book preview, and mock publishing actions.",
+    "A private StoryVerse editor for drafting and publishing stories.",
 };
 
-export default function StudioEditorPage() {
+export default async function StudioEditorPage() {
+  await requireAuthor("/studio/editor");
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <SiteHeader />

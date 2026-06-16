@@ -4,11 +4,21 @@ import { StoryCover } from "@/components/story-cover";
 import { Badge } from "@/components/ui/badge";
 import type { CoverTheme } from "@/lib/sample-stories";
 
+const coverThemes = new Set<string>([
+  "terracotta",
+  "gold",
+  "library",
+  "olive",
+  "rose",
+  "ink",
+]);
+
 export type EditorPreviewState = {
   title: string;
   genre: string;
   description: string;
   coverDirection: string;
+  coverTheme?: CoverTheme | string;
   chapterTitle: string;
   chapterContent: string;
 };
@@ -27,13 +37,18 @@ export function EditorPreview({ preview, wordCount, estimatedReadTime }: EditorP
   const description =
     preview.description.trim() ||
     "A polished story preview will appear here as the draft takes shape.";
-  const coverTheme: CoverTheme = genre.toLowerCase().includes("romance")
-    ? "gold"
-    : genre.toLowerCase().includes("mystery")
-      ? "olive"
-      : genre.toLowerCase().includes("sci")
-        ? "library"
-        : "terracotta";
+  const selectedCoverTheme = preview.coverTheme;
+  let coverTheme: CoverTheme = "terracotta";
+
+  if (selectedCoverTheme && coverThemes.has(selectedCoverTheme)) {
+    coverTheme = selectedCoverTheme as CoverTheme;
+  } else if (genre.toLowerCase().includes("romance")) {
+    coverTheme = "gold";
+  } else if (genre.toLowerCase().includes("mystery")) {
+    coverTheme = "olive";
+  } else if (genre.toLowerCase().includes("sci")) {
+    coverTheme = "library";
+  }
 
   return (
     <aside className="rounded-[1.5rem] border border-border/80 bg-card/90 p-5 shadow-[0_20px_60px_oklch(0.205_0.023_52.2_/_0.08)] lg:sticky lg:top-24">

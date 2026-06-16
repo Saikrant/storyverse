@@ -1,13 +1,17 @@
 import { BarChart3, BookCheck, MessageCircle, WandSparkles } from "lucide-react";
 
-import { studioStats } from "@/lib/studio-sample";
+import type { StudioStat } from "@/lib/data/studio";
 
 const icons = [BarChart3, BookCheck, MessageCircle, WandSparkles];
 
-export function StudioStats() {
+type StudioStatsProps = {
+  stats: StudioStat[];
+};
+
+export function StudioStats({ stats }: StudioStatsProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {studioStats.map((stat, index) => {
+      {stats.map((stat, index) => {
         const Icon = icons[index];
 
         return (

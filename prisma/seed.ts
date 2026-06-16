@@ -5,10 +5,8 @@ import { sampleStories } from "../src/lib/sample-stories";
 const prisma = new PrismaClient();
 
 const seededStories = sampleStories;
-
-function authorEmail(name: string) {
-  return `${name.toLowerCase().replaceAll(" ", ".")}@storyverse.dev`;
-}
+const ownerAuthorEmail = process.env.AUTHOR_EMAIL ?? "author@storyverse.dev";
+const ownerAuthorName = process.env.AUTHOR_NAME ?? "StoryVerse Author";
 
 async function main() {
   await prisma.$transaction([
@@ -17,6 +15,31 @@ async function main() {
     prisma.chapter.deleteMany(),
     prisma.story.deleteMany(),
   ]);
+
+  await prisma.user.updateMany({
+    where: {
+      role: UserRole.AUTHOR,
+      email: {
+        not: ownerAuthorEmail,
+      },
+    },
+    data: {
+      role: UserRole.READER,
+    },
+  });
+
+  const author = await prisma.user.upsert({
+    where: { email: ownerAuthorEmail },
+    update: {
+      name: ownerAuthorName,
+      role: UserRole.AUTHOR,
+    },
+    create: {
+      name: ownerAuthorName,
+      email: ownerAuthorEmail,
+      role: UserRole.AUTHOR,
+    },
+  });
 
   const readerAvery = await prisma.user.upsert({
     where: { email: "avery.reader@storyverse.dev" },
@@ -49,19 +72,6 @@ async function main() {
   });
 
   for (const [storyIndex, sampleStory] of seededStories.entries()) {
-    const author = await prisma.user.upsert({
-      where: { email: authorEmail(sampleStory.author) },
-      update: {
-        name: sampleStory.author,
-        role: UserRole.AUTHOR,
-      },
-      create: {
-        name: sampleStory.author,
-        email: authorEmail(sampleStory.author),
-        role: UserRole.AUTHOR,
-      },
-    });
-
     const story = await prisma.story.create({
       data: {
         authorId: author.id,

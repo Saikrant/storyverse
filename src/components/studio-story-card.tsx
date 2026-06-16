@@ -2,7 +2,7 @@ import { ArrowRight, Clock3 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { StudioStory } from "@/lib/studio-sample";
+import type { StudioStory } from "@/lib/data/studio";
 import { cn } from "@/lib/utils";
 
 type StudioStoryCardProps = {
