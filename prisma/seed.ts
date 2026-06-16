@@ -4,7 +4,11 @@ import { sampleStories } from "../src/lib/sample-stories";
 
 const prisma = new PrismaClient();
 
-const seededStories = sampleStories.slice(0, 3);
+const seededStories = sampleStories;
+
+function authorEmail(name: string) {
+  return `${name.toLowerCase().replaceAll(" ", ".")}@storyverse.dev`;
+}
 
 async function main() {
   await prisma.$transaction([
@@ -13,17 +17,6 @@ async function main() {
     prisma.chapter.deleteMany(),
     prisma.story.deleteMany(),
   ]);
-
-  const author = await prisma.user.upsert({
-    where: { email: "mira.author@storyverse.dev" },
-    update: {},
-    create: {
-      name: "Mira Vale",
-      email: "mira.author@storyverse.dev",
-      role: UserRole.AUTHOR,
-      image: "https://example.com/avatars/mira-vale.png",
-    },
-  });
 
   const readerAvery = await prisma.user.upsert({
     where: { email: "avery.reader@storyverse.dev" },
@@ -45,7 +38,30 @@ async function main() {
     },
   });
 
+  const readerRen = await prisma.user.upsert({
+    where: { email: "ren.reader@storyverse.dev" },
+    update: {},
+    create: {
+      name: "Ren Patel",
+      email: "ren.reader@storyverse.dev",
+      role: UserRole.READER,
+    },
+  });
+
   for (const [storyIndex, sampleStory] of seededStories.entries()) {
+    const author = await prisma.user.upsert({
+      where: { email: authorEmail(sampleStory.author) },
+      update: {
+        name: sampleStory.author,
+        role: UserRole.AUTHOR,
+      },
+      create: {
+        name: sampleStory.author,
+        email: authorEmail(sampleStory.author),
+        role: UserRole.AUTHOR,
+      },
+    });
+
     const story = await prisma.story.create({
       data: {
         authorId: author.id,
@@ -54,7 +70,7 @@ async function main() {
         description: sampleStory.description,
         genre: sampleStory.genre,
         coverTheme: sampleStory.cover.theme,
-        status: storyIndex === 2 ? StoryStatus.PUBLISHED : StoryStatus.DRAFT,
+        status: StoryStatus.PUBLISHED,
       },
     });
 
@@ -67,7 +83,7 @@ async function main() {
       },
     });
 
-  for (const chapter of sampleStory.chapters.slice(0, 3)) {
+    for (const chapter of sampleStory.chapters.slice(0, 3)) {
       const seededChapter = await prisma.chapter.create({
         data: {
           storyId: story.id,
@@ -92,6 +108,12 @@ async function main() {
             storyId: story.id,
             chapterId: seededChapter.id,
             content: "This chapter has a strong closing beat. I would keep reading immediately.",
+          },
+          {
+            userId: readerRen.id,
+            storyId: story.id,
+            chapterId: seededChapter.id,
+            content: `The cover direction, ${sampleStory.cover.accent.toLowerCase()}, matches the promise of this chapter.`,
           },
         ],
       });

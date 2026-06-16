@@ -2,17 +2,11 @@ import { notFound } from "next/navigation";
 
 import { SiteHeader } from "@/components/site-header";
 import { StoryReader } from "@/components/story-reader";
-import { getStoryBySlug, sampleStories } from "@/lib/sample-stories";
-
-export function generateStaticParams() {
-  return sampleStories.map((story) => ({
-    slug: story.slug,
-  }));
-}
+import { getStoryBySlug } from "@/lib/data/stories";
 
 export async function generateMetadata({ params }: PageProps<"/books/[slug]/read">) {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug, { deferToRequest: false });
 
   if (!story) {
     return {
@@ -28,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/books/[slug]/read
 
 export default async function StoryReaderPage({ params }: PageProps<"/books/[slug]/read">) {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug);
 
   if (!story) {
     notFound();

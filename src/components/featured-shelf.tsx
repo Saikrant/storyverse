@@ -4,9 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { BookCard } from "@/components/book-card";
 import { SectionHeading } from "@/components/section-heading";
 import { Button } from "@/components/ui/button";
-import { featuredStories } from "@/lib/sample-stories";
+import { getFeaturedStories } from "@/lib/data/stories";
 
-export function FeaturedShelf() {
+export async function FeaturedShelf() {
+  const featuredStories = await getFeaturedStories();
+
   return (
     <section id="stories" className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

@@ -6,11 +6,13 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { sampleStories } from "@/lib/sample-stories";
+import { getPublishedStories } from "@/lib/data/stories";
 
 const genres = ["All", "Fantasy", "Romance", "Science Fiction", "Mystery", "Literary"];
 
-export default function BooksPage() {
+export default async function BooksPage() {
+  const stories = await getPublishedStories();
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <SiteHeader />
@@ -20,11 +22,11 @@ export default function BooksPage() {
             <SectionHeading
               eyebrow="Story discovery"
               title="Browse the StoryVerse library"
-              description="Explore static sample books and serial stories presented with the future discovery experience in mind."
+              description="Explore published books and serial stories presented with the future discovery experience in mind."
               className="mx-0 max-w-3xl text-left"
             />
             <Badge className="w-fit rounded-full bg-accent text-accent-foreground">
-              Static preview data
+              Published stories
             </Badge>
           </div>
 
@@ -57,7 +59,7 @@ export default function BooksPage() {
 
         <section className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-8">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {sampleStories.map((story) => (
+            {stories.map((story) => (
               <BookCard key={story.id} story={story} variant="discovery" />
             ))}
           </div>

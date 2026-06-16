@@ -3,17 +3,11 @@ import { notFound } from "next/navigation";
 import { ChapterList } from "@/components/chapter-list";
 import { SiteHeader } from "@/components/site-header";
 import { StoryDetailHero } from "@/components/story-detail-hero";
-import { getStoryBySlug, sampleStories } from "@/lib/sample-stories";
-
-export function generateStaticParams() {
-  return sampleStories.map((story) => ({
-    slug: story.slug,
-  }));
-}
+import { getStoryBySlug } from "@/lib/data/stories";
 
 export async function generateMetadata({ params }: PageProps<"/books/[slug]">) {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug, { deferToRequest: false });
 
   if (!story) {
     return {
@@ -29,7 +23,7 @@ export async function generateMetadata({ params }: PageProps<"/books/[slug]">) {
 
 export default async function StoryDetailPage({ params }: PageProps<"/books/[slug]">) {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug);
 
   if (!story) {
     notFound();

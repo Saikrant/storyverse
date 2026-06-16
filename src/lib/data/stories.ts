@@ -1,0 +1,204 @@
+import { StoryStatus as PrismaStoryStatus } from "@prisma/client";
+import { connection } from "next/server";
+
+import { prisma } from "@/lib/prisma";
+import type { CoverTheme, SampleStory, StoryChapter, StoryStatus } from "@/lib/sample-stories";
+
+type StoryQueryOptions = {
+  deferToRequest?: boolean;
+};
+
+const coverThemes = new Set<CoverTheme>([
+  "terracotta",
+  "gold",
+  "library",
+  "olive",
+  "rose",
+  "ink",
+]);
+
+const coverAccents: Record<CoverTheme, string> = {
+  terracotta: "Copper lanterns and velvet shadows",
+  gold: "Gilded ink over rain-polished stone",
+  library: "Deep orbit blue with archival silver",
+  olive: "Pressed botanicals and field notes",
+  rose: "Faded rose paper and salt air",
+  ink: "Charcoal vellum and ember seals",
+};
+
+const defaultOptions: Required<StoryQueryOptions> = {
+  deferToRequest: true,
+};
+
+function normalizeCoverTheme(theme: string | null): CoverTheme {
+  return theme && coverThemes.has(theme as CoverTheme) ? (theme as CoverTheme) : "library";
+}
+
+function mapStoryStatus(status: PrismaStoryStatus): StoryStatus {
+  return status === PrismaStoryStatus.PUBLISHED ? "Complete" : "Draft";
+}
+
+function mapChapter(chapter: {
+  id: string;
+  title: string;
+  chapterNumber: number;
+  content: string;
+  estimatedReadTime: string | null;
+}): StoryChapter {
+  return {
+    id: chapter.id,
+    title: chapter.title,
+    chapterNumber: chapter.chapterNumber,
+    content: chapter.content,
+    estimatedReadTime: chapter.estimatedReadTime ?? "Preview chapter",
+  };
+}
+
+function mapStory(story: {
+  id: string;
+  slug: string;
+  title: string;
+  genre: string;
+  description: string;
+  coverTheme: string | null;
+  status: PrismaStoryStatus;
+  author: {
+    name: string;
+  };
+  chapters: {
+    id: string;
+    title: string;
+    chapterNumber: number;
+    content: string;
+    estimatedReadTime: string | null;
+  }[];
+  _count: {
+    chapters: number;
+    comments: number;
+  };
+}): SampleStory {
+  const theme = normalizeCoverTheme(story.coverTheme);
+
+  return {
+    id: story.id,
+    slug: story.slug,
+    title: story.title,
+    genre: story.genre,
+    description: story.description,
+    author: story.author.name,
+    chapterCount: story._count.chapters,
+    readerNotes: story._count.comments,
+    status: mapStoryStatus(story.status),
+    cover: {
+      theme,
+      accent: coverAccents[theme],
+    },
+    chapters: story.chapters.map(mapChapter),
+  };
+}
+
+async function maybeDeferToRequest(options?: StoryQueryOptions) {
+  const { deferToRequest } = { ...defaultOptions, ...options };
+
+  if (deferToRequest) {
+    await connection();
+  }
+}
+
+export async function getPublishedStories(options?: StoryQueryOptions) {
+  await maybeDeferToRequest(options);
+
+  const stories = await prisma.story.findMany({
+    where: {
+      status: PrismaStoryStatus.PUBLISHED,
+    },
+    include: {
+      author: {
+        select: {
+          name: true,
+        },
+      },
+      chapters: {
+        orderBy: {
+          chapterNumber: "asc",
+        },
+      },
+      _count: {
+        select: {
+          chapters: true,
+          comments: true,
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  return stories.map(mapStory);
+}
+
+export async function getStoryBySlug(slug: string, options?: StoryQueryOptions) {
+  await maybeDeferToRequest(options);
+
+  const story = await prisma.story.findFirst({
+    where: {
+      slug,
+      status: PrismaStoryStatus.PUBLISHED,
+    },
+    include: {
+      author: {
+        select: {
+          name: true,
+        },
+      },
+      chapters: {
+        orderBy: {
+          chapterNumber: "asc",
+        },
+      },
+      _count: {
+        select: {
+          chapters: true,
+          comments: true,
+        },
+      },
+    },
+  });
+
+  return story ? mapStory(story) : null;
+}
+
+export async function getFeaturedStories(options?: StoryQueryOptions) {
+  await maybeDeferToRequest(options);
+
+  const stories = await prisma.story.findMany({
+    where: {
+      status: PrismaStoryStatus.PUBLISHED,
+    },
+    include: {
+      author: {
+        select: {
+          name: true,
+        },
+      },
+      chapters: {
+        orderBy: {
+          chapterNumber: "asc",
+        },
+      },
+      _count: {
+        select: {
+          chapters: true,
+          comments: true,
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: 3,
+  });
+
+  return stories.map(mapStory);
+}
