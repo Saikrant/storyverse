@@ -5,6 +5,7 @@ import { LoginForm } from "@/app/author/login/login-form";
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { isDatabaseUnavailableError } from "@/lib/database-errors";
 import { getAuthorSession } from "@/lib/auth";
 
 export const metadata = {
@@ -23,7 +24,19 @@ function getSafeNextPath(value: string | undefined) {
 }
 
 export default async function AuthorLoginPage({ searchParams }: LoginPageProps) {
-  const session = await getAuthorSession();
+  let session = null;
+  let databaseUnavailable = false;
+
+  try {
+    session = await getAuthorSession();
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      databaseUnavailable = true;
+    } else {
+      throw error;
+    }
+  }
+
   const { next } = await searchParams;
   const nextPath = getSafeNextPath(next);
 
@@ -55,7 +68,13 @@ export default async function AuthorLoginPage({ searchParams }: LoginPageProps) 
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Use the configured author password to continue to the private workspace.
             </p>
-            {session ? (
+            {databaseUnavailable ? (
+              <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
+                <p className="text-sm leading-6 text-destructive">
+                  Studio could not connect to the library database. Please try again.
+                </p>
+              </div>
+            ) : session ? (
               <div className="mt-6 rounded-2xl bg-background/70 p-4">
                 <p className="text-sm text-muted-foreground">
                   Signed in as <span className="font-medium text-foreground">{session.name}</span>.

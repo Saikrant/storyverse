@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "StoryVerse | Publish Beautiful Stories",
   description:
-    "A premium story publishing and reading platform for authors, chapters, reader comments, and future AI-assisted writing enhancement.",
+    "A premium story publishing and reading platform for authors, chapters, and reader comments.",
 };
 
 export default function RootLayout({

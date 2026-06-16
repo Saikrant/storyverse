@@ -157,7 +157,7 @@ export function ReaderNotes({ story, chapter }: ReaderNotesProps) {
               ))
             ) : (
               <p className="py-5 text-sm leading-6 text-muted-foreground">
-                No reader notes for this chapter yet.
+                Reader notes will appear here once readers respond.
               </p>
             )}
           </div>

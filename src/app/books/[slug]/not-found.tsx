@@ -14,7 +14,7 @@ export default function StoryNotFound() {
           </p>
           <h1 className="mt-4 text-4xl font-semibold text-foreground">This story is not in the library.</h1>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            The sample catalog is static for now. Return to the library to choose one of the available StoryVerse previews.
+            It may still be a private draft, or it may not exist. Return to the library to choose an available published story.
           </p>
           <Button asChild className="mt-8 rounded-full px-6">
             <Link href="/books">Back to Library</Link>

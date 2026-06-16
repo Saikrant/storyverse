@@ -7,6 +7,7 @@ import {
   setAuthorSession,
   verifyAuthorPassword,
 } from "@/lib/auth";
+import { isDatabaseUnavailableError, logDatabaseUnavailable } from "@/lib/database-errors";
 import { prisma } from "@/lib/prisma";
 
 export type LoginActionState = {
@@ -38,16 +39,27 @@ export async function loginAuthor(
     return { error: "That password does not unlock the author workspace." };
   }
 
-  const author = await prisma.user.findUnique({
-    where: { email: authorEmail },
-    select: {
-      email: true,
-      role: true,
-    },
-  });
+  let author;
+
+  try {
+    author = await prisma.user.findUnique({
+      where: { email: authorEmail },
+      select: {
+        email: true,
+        role: true,
+      },
+    });
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      logDatabaseUnavailable("loginAuthor", error);
+      return { error: "Studio could not connect to the library database. Please try again." };
+    }
+
+    throw error;
+  }
 
   if (!author || (author.role !== "AUTHOR" && author.role !== "ADMIN")) {
-    return { error: "The configured author user was not found. Reseed the database or check AUTHOR_EMAIL." };
+    return { error: "The configured author user was not found. Check AUTHOR_EMAIL or run the demo cleanup/setup script." };
   }
 
   await setAuthorSession(author.email);

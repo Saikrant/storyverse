@@ -5,6 +5,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 
+import {
+  DatabaseUnavailableError,
+  isDatabaseUnavailableError,
+  logDatabaseUnavailable,
+} from "@/lib/database-errors";
 import { prisma } from "@/lib/prisma";
 
 const AUTHOR_SESSION_COOKIE = "storyverse_author";
@@ -102,15 +107,26 @@ export async function getAuthorSession(): Promise<AuthorSession | null> {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-    },
-  });
+  let user: AuthorSession | null;
+
+  try {
+    user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      logDatabaseUnavailable("getAuthorSession", error);
+      throw new DatabaseUnavailableError();
+    }
+
+    throw error;
+  }
 
   if (!user || (user.role !== UserRole.AUTHOR && user.role !== UserRole.ADMIN)) {
     return null;

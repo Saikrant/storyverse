@@ -9,6 +9,7 @@ import { StudioStoryCard } from "@/components/studio-story-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { logoutAuthor } from "@/app/studio/actions";
+import { isDatabaseUnavailableError } from "@/lib/database-errors";
 import { getStudioDashboard } from "@/lib/data/studio";
 import { requireAuthor } from "@/lib/auth";
 
@@ -19,8 +20,40 @@ export const metadata = {
 };
 
 export default async function StudioPage() {
-  const author = await requireAuthor("/studio");
-  const dashboard = await getStudioDashboard(author.id);
+  let author;
+  let dashboard;
+
+  try {
+    author = await requireAuthor("/studio");
+    dashboard = await getStudioDashboard(author.id);
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      return (
+        <div className="flex min-h-full flex-1 flex-col">
+          <SiteHeader />
+          <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-5 py-20 text-center sm:px-8">
+            <div className="rounded-[2rem] border border-border/80 bg-card/85 p-8 shadow-[0_24px_70px_oklch(0.205_0.023_52.2_/_0.1)] sm:p-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+                Studio unavailable
+              </p>
+              <h1 className="mt-4 text-4xl font-semibold text-foreground">
+                Studio could not connect to the library database.
+              </h1>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Please try again. If this continues, check the production database connection.
+              </p>
+              <Button asChild className="mt-8 rounded-full px-6">
+                <Link href="/studio">Try Again</Link>
+              </Button>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    throw error;
+  }
+
   const continueStory =
     dashboard.stories.find((story) => story.status === "Draft") ?? dashboard.stories[0];
 
@@ -136,7 +169,7 @@ export default async function StudioPage() {
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">Coming soon to Studio</h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Future passes can support continuity checks, chapter summaries, line edits, and reader-facing blurbs.
+                Future passes can add richer draft organization, publishing polish, and reader-facing book details.
               </p>
               <div className="mt-5 rounded-2xl bg-background/70 p-4 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Next milestone:</span>{" "}

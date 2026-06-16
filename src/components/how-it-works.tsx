@@ -16,9 +16,9 @@ const steps = [
     icon: BookMarked,
   },
   {
-    title: "Improve with reader notes and AI",
+    title: "Review reader notes",
     description:
-      "Use reader feedback and future AI suggestions to sharpen scenes while keeping creative control.",
+      "Collect reader feedback in Studio and decide what helps the next draft.",
     icon: MessageSquareText,
   },
 ];

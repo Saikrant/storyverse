@@ -20,7 +20,7 @@ export function ChapterList({ story }: ChapterListProps) {
             <h2 className="mt-2 text-3xl font-semibold text-foreground">Begin with a chapter</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Showing {story.chapters.length} sample chapters from a {story.chapterCount}-chapter story.
+            Showing {story.chapters.length} published chapters from this {story.chapterCount}-chapter story.
           </p>
         </div>
         <div className="divide-y divide-border/70">

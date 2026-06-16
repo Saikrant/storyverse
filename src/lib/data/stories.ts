@@ -1,6 +1,10 @@
 import { StoryStatus as PrismaStoryStatus } from "@prisma/client";
 import { connection } from "next/server";
 
+import {
+  isDatabaseUnavailableError,
+  logDatabaseUnavailable,
+} from "@/lib/database-errors";
 import { prisma } from "@/lib/prisma";
 import type {
   CoverTheme,
@@ -12,6 +16,16 @@ import type {
 
 type StoryQueryOptions = {
   deferToRequest?: boolean;
+};
+
+export type StoryListResult = {
+  stories: SampleStory[];
+  unavailable: boolean;
+};
+
+export type StoryResult = {
+  story: SampleStory | null;
+  unavailable: boolean;
 };
 
 const coverThemes = new Set<CoverTheme>([
@@ -151,127 +165,163 @@ async function maybeDeferToRequest(options?: StoryQueryOptions) {
 export async function getPublishedStories(options?: StoryQueryOptions) {
   await maybeDeferToRequest(options);
 
-  const stories = await prisma.story.findMany({
-    where: {
-      status: PrismaStoryStatus.PUBLISHED,
-    },
-    include: {
-      author: {
-        select: {
-          name: true,
-        },
+  try {
+    const stories = await prisma.story.findMany({
+      where: {
+        status: PrismaStoryStatus.PUBLISHED,
       },
-      chapters: {
-        include: {
-          comments: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 12,
+      include: {
+        author: {
+          select: {
+            name: true,
           },
         },
-        orderBy: {
-          chapterNumber: "asc",
+        chapters: {
+          include: {
+            comments: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 12,
+            },
+          },
+          orderBy: {
+            chapterNumber: "asc",
+          },
+        },
+        _count: {
+          select: {
+            chapters: true,
+            comments: true,
+          },
         },
       },
-      _count: {
-        select: {
-          chapters: true,
-          comments: true,
-        },
+      orderBy: {
+        updatedAt: "desc",
       },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+    });
 
-  return stories.map(mapStory);
+    return {
+      stories: stories.map(mapStory),
+      unavailable: false,
+    } satisfies StoryListResult;
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      logDatabaseUnavailable("getPublishedStories", error);
+      return { stories: [], unavailable: true } satisfies StoryListResult;
+    }
+
+    throw error;
+  }
 }
 
 export async function getStoryBySlug(slug: string, options?: StoryQueryOptions) {
   await maybeDeferToRequest(options);
 
-  const story = await prisma.story.findFirst({
-    where: {
-      slug,
-      status: PrismaStoryStatus.PUBLISHED,
-    },
-    include: {
-      author: {
-        select: {
-          name: true,
-        },
+  try {
+    const story = await prisma.story.findFirst({
+      where: {
+        slug,
+        status: PrismaStoryStatus.PUBLISHED,
       },
-      chapters: {
-        include: {
-          comments: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 12,
+      include: {
+        author: {
+          select: {
+            name: true,
           },
         },
-        orderBy: {
-          chapterNumber: "asc",
+        chapters: {
+          include: {
+            comments: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 12,
+            },
+          },
+          orderBy: {
+            chapterNumber: "asc",
+          },
+        },
+        _count: {
+          select: {
+            chapters: true,
+            comments: true,
+          },
         },
       },
-      _count: {
-        select: {
-          chapters: true,
-          comments: true,
-        },
-      },
-    },
-  });
+    });
 
-  return story ? mapStory(story) : null;
+    return {
+      story: story ? mapStory(story) : null,
+      unavailable: false,
+    } satisfies StoryResult;
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      logDatabaseUnavailable("getStoryBySlug", error);
+      return { story: null, unavailable: true } satisfies StoryResult;
+    }
+
+    throw error;
+  }
 }
 
 export async function getFeaturedStories(options?: StoryQueryOptions) {
   await maybeDeferToRequest(options);
 
-  const stories = await prisma.story.findMany({
-    where: {
-      status: PrismaStoryStatus.PUBLISHED,
-    },
-    include: {
-      author: {
-        select: {
-          name: true,
+  try {
+    const stories = await prisma.story.findMany({
+      where: {
+        status: PrismaStoryStatus.PUBLISHED,
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+          },
+        },
+        chapters: {
+          orderBy: {
+            chapterNumber: "asc",
+          },
+        },
+        _count: {
+          select: {
+            chapters: true,
+            comments: true,
+          },
         },
       },
-      chapters: {
-        orderBy: {
-          chapterNumber: "asc",
-        },
+      orderBy: {
+        updatedAt: "desc",
       },
-      _count: {
-        select: {
-          chapters: true,
-          comments: true,
-        },
-      },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 3,
-  });
+      take: 3,
+    });
 
-  return stories.map(mapStory);
+    return {
+      stories: stories.map(mapStory),
+      unavailable: false,
+    } satisfies StoryListResult;
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      logDatabaseUnavailable("getFeaturedStories", error);
+      return { stories: [], unavailable: true } satisfies StoryListResult;
+    }
+
+    throw error;
+  }
 }

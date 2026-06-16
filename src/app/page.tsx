@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BookMarked, PenLine } from "lucide-react";
 
-import { AiPreviewPanel } from "@/components/ai-preview-panel";
 import { FeaturedShelf } from "@/components/featured-shelf";
 import { HowItWorks } from "@/components/how-it-works";
 import { SiteHeader } from "@/components/site-header";
@@ -23,8 +22,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
               StoryVerse brings drafting, book-style publishing, reader notes,
-              and future AI-enhanced editing into one warm, editorial home for
-              storytellers.
+              and a private author Studio into one warm, editorial home for storytellers.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="h-12 rounded-full px-6 text-base">
@@ -95,7 +93,6 @@ export default function Home() {
 
         <FeaturedShelf />
         <HowItWorks />
-        <AiPreviewPanel />
 
         <section id="write" className="mx-auto w-full max-w-6xl px-5 pb-20 pt-8 sm:px-8">
           <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-library p-6 text-library-foreground shadow-[0_24px_70px_oklch(0.205_0.023_52.2_/_0.14)] sm:p-8 md:p-10">

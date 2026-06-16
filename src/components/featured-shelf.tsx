@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getFeaturedStories } from "@/lib/data/stories";
 
 export async function FeaturedShelf() {
-  const featuredStories = await getFeaturedStories();
+  const { stories: featuredStories, unavailable } = await getFeaturedStories();
 
   return (
     <section id="stories" className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8">
@@ -38,16 +38,20 @@ export async function FeaturedShelf() {
       ) : (
         <div className="mt-10 rounded-[1.5rem] border border-border/80 bg-card/80 p-6 shadow-[0_18px_50px_oklch(0.205_0.023_52.2_/_0.06)] sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
-            The shelf is waiting
+            {unavailable ? "Library unavailable" : "The shelf is waiting"}
           </p>
           <h3 className="mt-3 text-2xl font-semibold text-foreground">
-            The shelf is waiting for its first story.
+            {unavailable
+              ? "The shelf could not be reached right now."
+              : "The shelf is waiting for its first story."}
           </h3>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Published books will appear here after the author creates a story in Studio and moves it from draft to public.
+            {unavailable
+              ? "Try again soon. If you are the author, enter the Studio to begin writing or check the database connection."
+              : "Published books will appear here after the author creates a story in Studio and moves it from draft to public."}
           </p>
           <Button asChild className="mt-5 rounded-full px-5">
-            <Link href="/studio">Start in Studio</Link>
+            <Link href="/studio">{unavailable ? "Enter the Studio" : "Start in Studio"}</Link>
           </Button>
         </div>
       )}

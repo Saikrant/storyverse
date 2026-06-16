@@ -12,7 +12,7 @@ import { getPublishedStories } from "@/lib/data/stories";
 const genres = ["All", "Fantasy", "Romance", "Science Fiction", "Mystery", "Literary"];
 
 export default async function BooksPage() {
-  const stories = await getPublishedStories();
+  const { stories, unavailable } = await getPublishedStories();
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -71,17 +71,23 @@ export default async function BooksPage() {
                 <BookOpenCheck className="size-5" aria-hidden="true" />
               </span>
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
-                No published books yet
+                {unavailable ? "Library unavailable" : "No published books yet"}
               </p>
               <h2 className="mt-3 text-3xl font-semibold text-foreground">
-                The shelf is waiting for its first story.
+                {unavailable
+                  ? "The library could not be reached right now."
+                  : "The shelf is waiting for its first story."}
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                Published stories will appear here as soon as the author moves a draft from Studio to the public library.
+                {unavailable
+                  ? "Please try again soon. Published books are safe, but the database connection is temporarily unavailable."
+                  : "Published stories will appear here as soon as the author moves a draft from Studio to the public library."}
               </p>
-              <Button asChild className="mt-6 rounded-full px-5">
-                <Link href="/studio">Start by creating your first story in Studio</Link>
-              </Button>
+              {!unavailable ? (
+                <Button asChild className="mt-6 rounded-full px-5">
+                  <Link href="/studio">Start by creating your first story in Studio</Link>
+                </Button>
+              ) : null}
             </div>
           )}
         </section>
