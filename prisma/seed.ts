@@ -9,12 +9,13 @@ const ownerAuthorEmail = process.env.AUTHOR_EMAIL ?? "author@storyverse.dev";
 const ownerAuthorName = process.env.AUTHOR_NAME ?? "StoryVerse Author";
 
 async function main() {
-  await prisma.$transaction([
-    prisma.enhancement.deleteMany(),
-    prisma.comment.deleteMany(),
-    prisma.chapter.deleteMany(),
-    prisma.story.deleteMany(),
-  ]);
+  await prisma.story.deleteMany({
+    where: {
+      slug: {
+        in: seededStories.map((story) => story.slug),
+      },
+    },
+  });
 
   await prisma.user.updateMany({
     where: {

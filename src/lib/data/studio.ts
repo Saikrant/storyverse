@@ -7,6 +7,7 @@ import {
   isDatabaseUnavailableError,
   logDatabaseUnavailable,
 } from "@/lib/database-errors";
+import { getChapterPlainText } from "@/lib/chapter-content";
 import { prisma } from "@/lib/prisma";
 
 export type StudioStoryStatus = "Draft" | "Published" | "Needs Review";
@@ -115,7 +116,7 @@ function relativeDate(date: Date) {
 }
 
 function countWords(value: string) {
-  return value.trim().split(/\s+/).filter(Boolean).length;
+  return getChapterPlainText(value).split(/\s+/).filter(Boolean).length;
 }
 
 export async function getStudioDashboard(authorId: string) {
@@ -257,9 +258,11 @@ export async function getEditableStory(authorId: string, storyId: string) {
               },
             },
           },
-          orderBy: {
-            chapterNumber: "asc",
-          },
+          orderBy: [
+            { chapterNumber: "asc" },
+            { createdAt: "asc" },
+            { id: "asc" },
+          ],
         },
         comments: {
           include: {

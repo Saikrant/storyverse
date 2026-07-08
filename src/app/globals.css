@@ -154,6 +154,94 @@
 }
 
 @layer components {
+  .prose-editor {
+    color: var(--foreground);
+  }
+
+  .prose-editor > * + *,
+  .chapter-content > * + * {
+    margin-top: 1.75rem;
+  }
+
+  .prose-editor p,
+  .chapter-content p {
+    margin: 0;
+  }
+
+  .prose-editor h1,
+  .chapter-content h1 {
+    margin: 2.25rem 0 0;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    line-height: 1.12;
+  }
+
+  .prose-editor h2,
+  .chapter-content h2 {
+    margin: 2rem 0 0;
+    font-size: clamp(1.55rem, 4vw, 2.2rem);
+    font-weight: 600;
+    line-height: 1.18;
+  }
+
+  .prose-editor ul,
+  .chapter-content ul {
+    list-style: disc;
+  }
+
+  .prose-editor ol,
+  .chapter-content ol {
+    list-style: decimal;
+  }
+
+  .prose-editor ul,
+  .prose-editor ol,
+  .chapter-content ul,
+  .chapter-content ol {
+    margin: 0;
+    padding-left: 1.65rem;
+  }
+
+  .prose-editor li + li,
+  .chapter-content li + li {
+    margin-top: 0.75rem;
+  }
+
+  .prose-editor blockquote,
+  .chapter-content blockquote {
+    margin: 0;
+    border-left: 4px solid color-mix(in oklch, currentColor 24%, transparent);
+    padding-left: 1.25rem;
+    color: color-mix(in oklch, currentColor 78%, transparent);
+    font-style: italic;
+  }
+
+  .prose-editor hr,
+  .chapter-content hr {
+    margin: 2.25rem 0;
+    border: 0;
+    border-top: 1px solid color-mix(in oklch, currentColor 22%, transparent);
+  }
+
+  .prose-editor strong,
+  .chapter-content strong {
+    font-weight: 700;
+  }
+
+  .prose-editor em,
+  .chapter-content em {
+    font-style: italic;
+  }
+
+  .prose-editor u,
+  .chapter-content u {
+    text-underline-offset: 0.18em;
+  }
+
+  .prose-editor .ProseMirror-selectednode {
+    outline: 2px solid color-mix(in oklch, var(--ring) 54%, transparent);
+  }
+
   .surprise-loader {
     animation: surprise-loader-exit 420ms ease 2.15s forwards;
   }

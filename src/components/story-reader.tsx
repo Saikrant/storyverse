@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ChapterNavigation } from "@/components/chapter-navigation";
+import { FormattedChapterContent } from "@/components/formatted-chapter-content";
 import { ReaderNotes } from "@/components/reader-notes";
 import { ReaderThemeToggle, type ReaderTheme } from "@/components/reader-theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,8 @@ const readerTextClasses: Record<ReaderTheme, string> = {
 export function StoryReader({ story }: StoryReaderProps) {
   const [theme, setTheme] = useState<ReaderTheme>("light");
   const [chapterNumber, setChapterNumber] = useState(story.chapters[0]?.chapterNumber ?? 1);
+  const readerRef = useRef<HTMLElement>(null);
+  const shouldScrollToReader = useRef(false);
   const chapter = useMemo(
     () =>
       story.chapters.find((item) => item.chapterNumber === chapterNumber) ??
@@ -37,11 +40,35 @@ export function StoryReader({ story }: StoryReaderProps) {
     [chapterNumber, story.chapters]
   );
 
+  useEffect(() => {
+    if (!chapter || !shouldScrollToReader.current) {
+      return;
+    }
+
+    shouldScrollToReader.current = false;
+    window.requestAnimationFrame(() => {
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      readerRef.current?.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
+      readerRef.current?.focus({ preventScroll: true });
+    });
+  }, [chapter]);
+
   if (!chapter) {
     return null;
   }
 
-  const paragraphs = chapter.content.split("\n\n");
+  function selectChapter(nextChapterNumber: number) {
+    if (nextChapterNumber === chapter.chapterNumber) {
+      return;
+    }
+
+    shouldScrollToReader.current = true;
+    setChapterNumber(nextChapterNumber);
+  }
 
   return (
     <main className="flex-1">
@@ -63,11 +90,15 @@ export function StoryReader({ story }: StoryReaderProps) {
         <ChapterNavigation
           chapters={story.chapters}
           currentChapter={chapter}
-          onSelectChapter={setChapterNumber}
+          onSelectChapter={selectChapter}
         />
       </section>
 
-      <article className="mx-auto w-full max-w-4xl px-5 pb-10 sm:px-8">
+      <article
+        ref={readerRef}
+        tabIndex={-1}
+        className="mx-auto w-full max-w-4xl scroll-mt-6 px-5 pb-10 outline-none sm:px-8"
+      >
         <div
           className={cn(
             "rounded-[2rem] border border-border/80 p-6 shadow-[0_28px_80px_oklch(0.205_0.023_52.2_/_0.12)] sm:p-10 md:p-14",
@@ -86,11 +117,7 @@ export function StoryReader({ story }: StoryReaderProps) {
             </p>
           </header>
 
-          <div className="mx-auto mt-10 max-w-2xl space-y-7 font-heading text-[1.25rem] leading-9 sm:text-[1.35rem] sm:leading-10">
-            {paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
+          <FormattedChapterContent content={chapter.content} />
         </div>
       </article>
 
@@ -98,7 +125,7 @@ export function StoryReader({ story }: StoryReaderProps) {
         <ChapterNavigation
           chapters={story.chapters}
           currentChapter={chapter}
-          onSelectChapter={setChapterNumber}
+          onSelectChapter={selectChapter}
         />
       </section>
 

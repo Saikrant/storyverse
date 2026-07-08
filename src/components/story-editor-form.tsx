@@ -29,7 +29,12 @@ const initialEditorState: EditorFormState = {
 const initialActionState: StoryEditorActionState = {};
 
 function countWords(value: string) {
-  return value.trim().split(/\s+/).filter(Boolean).length;
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
 }
 
 function getReadTime(wordCount: number) {

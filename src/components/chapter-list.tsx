@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { getChapterPlainText } from "@/lib/chapter-content";
 import type { SampleStory } from "@/lib/sample-stories";
 
 type ChapterListProps = {
@@ -35,7 +36,7 @@ export function ChapterList({ story }: ChapterListProps) {
               <div>
                 <h3 className="text-xl font-semibold text-foreground">{chapter.title}</h3>
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                  {chapter.content.split("\n\n")[0]}
+                  {getChapterPlainText(chapter.content)}
                 </p>
                 <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Clock className="size-3.5" aria-hidden="true" />

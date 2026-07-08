@@ -1,10 +1,15 @@
 "use server";
 
-import { StoryStatus } from "@prisma/client";
+import { Prisma, StoryStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { clearAuthorSession, requireAuthor } from "@/lib/auth";
+import {
+  getChapterPlainText,
+  isChapterContentEmpty,
+  normalizeChapterContent,
+} from "@/lib/chapter-content";
 import { prisma } from "@/lib/prisma";
 
 export type StoryEditorActionState = {
@@ -30,7 +35,7 @@ function slugify(value: string) {
 }
 
 function countWords(value: string) {
-  return value.split(/\s+/).filter(Boolean).length;
+  return getChapterPlainText(value).split(/\s+/).filter(Boolean).length;
 }
 
 function getEstimatedReadTime(content: string) {
@@ -102,7 +107,7 @@ export async function createStory(
   const coverDirection = getStringValue(formData, "coverDirection");
   const coverTheme = normalizeCoverTheme(getStringValue(formData, "coverTheme"));
   const chapterTitle = getStringValue(formData, "chapterTitle");
-  const chapterContent = getStringValue(formData, "chapterContent");
+  const chapterContent = normalizeChapterContent(getStringValue(formData, "chapterContent"));
 
   if (!title) {
     return { error: "Story title is required." };
@@ -112,7 +117,7 @@ export async function createStory(
     return { error: "Chapter title is required." };
   }
 
-  if (!chapterContent) {
+  if (isChapterContentEmpty(chapterContent)) {
     return { error: "Chapter content is required." };
   }
 
@@ -207,37 +212,79 @@ export async function createChapter(
   }
 
   const title = getStringValue(formData, "chapterTitle");
-  const content = getStringValue(formData, "chapterContent");
+  const content = normalizeChapterContent(getStringValue(formData, "chapterContent"));
 
   if (!title) {
     return { error: "Chapter title is required." };
   }
 
-  if (!content) {
+  if (isChapterContentEmpty(content)) {
     return { error: "Chapter content is required." };
   }
 
-  const lastChapter = await prisma.chapter.findFirst({
-    where: {
-      storyId: story.id,
-    },
-    orderBy: {
-      chapterNumber: "desc",
-    },
-    select: {
-      chapterNumber: true,
-    },
-  });
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const existingDuplicate = await tx.chapter.findFirst({
+          where: {
+            storyId: story.id,
+            title,
+            content,
+          },
+          select: {
+            id: true,
+          },
+        });
 
-  await prisma.chapter.create({
-    data: {
-      storyId: story.id,
-      title,
-      content,
-      chapterNumber: (lastChapter?.chapterNumber ?? 0) + 1,
-      estimatedReadTime: getEstimatedReadTime(content),
-    },
-  });
+        if (existingDuplicate) {
+          return "duplicate";
+        }
+
+        const lastChapter = await tx.chapter.findFirst({
+          where: {
+            storyId: story.id,
+          },
+          orderBy: [
+            { chapterNumber: "desc" },
+            { createdAt: "desc" },
+            { id: "desc" },
+          ],
+          select: {
+            chapterNumber: true,
+          },
+        });
+
+        await tx.chapter.create({
+          data: {
+            storyId: story.id,
+            title,
+            content,
+            chapterNumber: (lastChapter?.chapterNumber ?? 0) + 1,
+            estimatedReadTime: getEstimatedReadTime(content),
+          },
+        });
+
+        return "created";
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+
+    if (result === "duplicate") {
+      return { message: "That chapter is already in this story." };
+    }
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2002" || error.code === "P2034")
+    ) {
+      return {
+        error:
+          "Another chapter save finished at the same time. Refresh the story and try again if the new chapter is missing.",
+      };
+    }
+
+    throw error;
+  }
 
   revalidateStoryWorkflows(story.id, story.slug);
 
@@ -272,13 +319,13 @@ export async function updateChapter(
   }
 
   const title = getStringValue(formData, "chapterTitle");
-  const content = getStringValue(formData, "chapterContent");
+  const content = normalizeChapterContent(getStringValue(formData, "chapterContent"));
 
   if (!title) {
     return { error: "Chapter title is required." };
   }
 
-  if (!content) {
+  if (isChapterContentEmpty(content)) {
     return { error: "Chapter content is required." };
   }
 

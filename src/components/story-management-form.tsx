@@ -41,7 +41,12 @@ function getReadTime(wordCount: number) {
 }
 
 function countWords(value: string) {
-  return value.trim().split(/\s+/).filter(Boolean).length;
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
 }
 
 function SubmitButton({
@@ -76,6 +81,26 @@ function HelpfulButton({ helpful }: { helpful: boolean }) {
     >
       <Star className="size-3.5" aria-hidden="true" />
       {pending ? "Saving..." : helpful ? "Helpful" : "Mark helpful"}
+    </Button>
+  );
+}
+
+function DeleteChapterButton({
+  disabled,
+}: {
+  disabled: boolean;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      variant="destructive"
+      className="h-10 rounded-full px-4"
+      disabled={disabled || pending}
+    >
+      <Trash2 className="size-4" aria-hidden="true" />
+      {pending ? "Deleting..." : "Delete Chapter"}
     </Button>
   );
 }
@@ -320,15 +345,7 @@ function ChapterEditor({
       <div className="mt-5 border-t border-border/70 pt-5">
         <form action={deleteAction} className="space-y-3">
           <ActionMessage state={deleteState} />
-          <Button
-            type="submit"
-            variant="destructive"
-            className="h-10 rounded-full px-4"
-            disabled={!canDelete || chapter.commentCount > 0}
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-            Delete Chapter
-          </Button>
+          <DeleteChapterButton disabled={!canDelete || chapter.commentCount > 0} />
           {!canDelete ? (
             <p className="text-xs leading-5 text-muted-foreground">
               Keep at least one chapter in the story.

@@ -5,6 +5,7 @@ import {
   isDatabaseUnavailableError,
   logDatabaseUnavailable,
 } from "@/lib/database-errors";
+import { normalizeChapterContent } from "@/lib/chapter-content";
 import { prisma } from "@/lib/prisma";
 import type {
   CoverTheme,
@@ -78,7 +79,7 @@ function mapChapter(chapter: {
     id: chapter.id,
     title: chapter.title,
     chapterNumber: chapter.chapterNumber,
-    content: chapter.content,
+    content: normalizeChapterContent(chapter.content),
     estimatedReadTime: chapter.estimatedReadTime ?? "Preview chapter",
     readerNotes: chapter.comments?.map(mapReaderNote) ?? [],
   };
@@ -192,9 +193,11 @@ export async function getPublishedStories(options?: StoryQueryOptions) {
               take: 12,
             },
           },
-          orderBy: {
-            chapterNumber: "asc",
-          },
+          orderBy: [
+            { chapterNumber: "asc" },
+            { createdAt: "asc" },
+            { id: "asc" },
+          ],
         },
         _count: {
           select: {
@@ -253,9 +256,11 @@ export async function getStoryBySlug(slug: string, options?: StoryQueryOptions) 
               take: 12,
             },
           },
-          orderBy: {
-            chapterNumber: "asc",
-          },
+          orderBy: [
+            { chapterNumber: "asc" },
+            { createdAt: "asc" },
+            { id: "asc" },
+          ],
         },
         _count: {
           select: {
@@ -295,9 +300,11 @@ export async function getFeaturedStories(options?: StoryQueryOptions) {
           },
         },
         chapters: {
-          orderBy: {
-            chapterNumber: "asc",
-          },
+          orderBy: [
+            { chapterNumber: "asc" },
+            { createdAt: "asc" },
+            { id: "asc" },
+          ],
         },
         _count: {
           select: {
