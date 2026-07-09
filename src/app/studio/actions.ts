@@ -132,7 +132,7 @@ export async function createStory(
       genre,
       description,
       coverTheme,
-      coverImage: coverDirection,
+      coverImage: coverDirection || null,
       status,
       chapters: {
         create: {

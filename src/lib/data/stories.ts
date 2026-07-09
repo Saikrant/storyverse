@@ -38,14 +38,7 @@ const coverThemes = new Set<CoverTheme>([
   "ink",
 ]);
 
-const coverAccents: Record<CoverTheme, string> = {
-  terracotta: "Copper lanterns and velvet shadows",
-  gold: "Gilded ink over rain-polished stone",
-  library: "Deep orbit blue with archival silver",
-  olive: "Pressed botanicals and field notes",
-  rose: "Faded rose paper and salt air",
-  ink: "Charcoal vellum and ember seals",
-};
+const defaultCoverDirection = "A warm literary cover direction";
 
 const defaultOptions: Required<StoryQueryOptions> = {
   deferToRequest: true,
@@ -109,6 +102,7 @@ function mapStory(story: {
   title: string;
   genre: string;
   description: string;
+  coverImage: string | null;
   coverTheme: string | null;
   status: PrismaStoryStatus;
   author: {
@@ -136,6 +130,7 @@ function mapStory(story: {
   };
 }): SampleStory {
   const theme = normalizeCoverTheme(story.coverTheme);
+  const coverDirection = story.coverImage?.trim() || defaultCoverDirection;
 
   return {
     id: story.id,
@@ -149,7 +144,7 @@ function mapStory(story: {
     status: mapStoryStatus(story.status),
     cover: {
       theme,
-      accent: coverAccents[theme],
+      accent: coverDirection,
     },
     chapters: story.chapters.map(mapChapter),
   };

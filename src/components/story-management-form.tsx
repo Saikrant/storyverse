@@ -363,6 +363,7 @@ function ChapterEditor({
 
 function StoryPreview({ story }: { story: EditableStory }) {
   const totalWords = story.chapters.reduce((total, chapter) => total + chapter.wordCount, 0);
+  const coverDirection = story.coverDirection.trim() || "A warm literary cover direction";
 
   return (
     <aside
@@ -377,6 +378,10 @@ function StoryPreview({ story }: { story: EditableStory }) {
       </p>
       <h2 className="mt-2 text-2xl font-semibold">{story.title}</h2>
       <p className="mt-3 text-sm leading-6 text-white/72">{story.description || "No description yet."}</p>
+      <div className="mt-5 rounded-2xl bg-white/10 p-3 text-sm">
+        <p className="text-white/60">Cover direction</p>
+        <p className="mt-1 font-medium leading-6">{coverDirection}</p>
+      </div>
       <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl bg-white/10 p-3">
           <p className="text-white/60">Chapters</p>
